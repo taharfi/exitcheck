@@ -6,6 +6,7 @@ import { BrandMark } from "@/components/brand";
 const navigation = [
   ["/app", "Positions & exits"],
   ["/agent", "Copy agent"],
+  ["/trade", "Trade & Research"],
   ["/research", "Research overview"],
   ["/discover", "Find traders"],
   ["/compare", "Test my budget"],
@@ -42,6 +43,7 @@ export function AppHeader({
             }
           >
             {label}
+            {href === "/trade" && <span className="beta">BETA</span>}
           </Link>
         ))}
       </nav>

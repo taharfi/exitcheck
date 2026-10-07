@@ -38,6 +38,9 @@ export function LandingPage() {
           ExitCheck<span className={styles.beta}>BETA</span>
         </Link>
         <nav className={styles.navigation} aria-label="Website navigation">
+          <Link href="/trade">
+            Trade &amp; Research <span className={styles.beta}>BETA</span>
+          </Link>
           <a href="#product">The product</a>
           <a href="#how-it-works">How it works</a>
           <a href="#questions">FAQ</a>
