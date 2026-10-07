@@ -332,10 +332,37 @@ try {
       page.getByLabel("Planning budget (USD)", { exact: true }),
     ).toHaveValue("250");
     await page.getByRole("button", { name: "$100", exact: true }).click();
+    const nextStep = page.getByRole("region", { name: "Your next step" });
+    await expect(
+      nextStep.getByRole("heading", { name: "Your plan is ready to watch" }),
+    ).toBeVisible();
+    await page
+      .getByLabel("Trader wallet", { exact: true })
+      .fill("not-a-wallet");
+    await expect(
+      nextStep.getByRole("heading", { name: "Choose one trader" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start watching", exact: true }),
+    ).toBeDisabled();
+    expect(posts).toBe(0);
+    await page.getByLabel("Trader wallet", { exact: true }).fill(trader);
     await expect(
       page.getByLabel("Planning budget (USD)", { exact: true }),
     ).toHaveValue("100");
     await page.getByLabel("Amount per entry (USD)", { exact: true }).fill("21");
+    await expect(
+      nextStep.getByRole("heading", { name: "Adjust your planning budget" }),
+    ).toBeVisible();
+    await expect(
+      page.getByLabel("Amount per entry (USD)", { exact: true }),
+    ).toHaveAttribute("aria-invalid", "true");
+    await expect(
+      page.getByLabel("Planning budget (USD)", { exact: true }),
+    ).toHaveAttribute("aria-invalid", "false");
+    await expect(
+      nextStep.getByRole("link", { name: "Adjust limits" }),
+    ).toHaveAttribute("href", "#agent-entry");
     await expect(
       page.getByRole("button", { name: "Start watching" }),
     ).toBeDisabled();
@@ -390,6 +417,9 @@ try {
       .click();
     for (const label of ["Review needed", "Skipped", "Exit detected"])
       await expect(page.getByText(label, { exact: true })).toBeVisible();
+    await expect(
+      nextStep.getByRole("heading", { name: "You have proposals to review" }),
+    ).toBeVisible();
     await activityPreview
       .getByRole("button", { name: "Check trader activity", exact: true })
       .click();
@@ -549,6 +579,9 @@ try {
     await expect(
       page.getByRole("button", { name: "Resume watching", exact: true }),
     ).toBeVisible();
+    await expect(
+      nextStep.getByRole("heading", { name: "Your plan is paused" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Stop plan", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Set up your agent", exact: true }),
@@ -559,6 +592,9 @@ try {
     await expect(
       page.getByRole("button", { name: "Start watching", exact: true }),
     ).toBeDisabled();
+    await expect(
+      nextStep.getByRole("heading", { name: "Sign in to save your plan" }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Synthetic test event", exact: true }),
     ).toHaveCount(0);

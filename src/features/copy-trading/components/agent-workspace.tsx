@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { AccountConnection } from "@/features/account/components/account-connection";
 import { decimal, money, decimalToMicro } from "@/lib/amounts";
+import { address } from "@/lib/provider/schemas";
 import type { AgentSnapshot, AgentDecision } from "../agent-model";
 import { AgentEntryReview } from "./agent-entry-review";
 import { AgentJournal } from "./agent-journal";
@@ -179,14 +180,126 @@ export function AgentWorkspace() {
   const entryAmount = /^\d{1,5}(\.\d{1,2})?$/.test(entry)
     ? decimalToMicro(entry)
     : null;
-  const validAmounts =
+  const validBudget =
     planningAmount !== null &&
-    entryAmount !== null &&
     planningAmount >= 25000000n &&
-    planningAmount <= 1000000000000n &&
+    planningAmount <= 1000000000000n;
+  const validEntry =
+    entryAmount !== null &&
     entryAmount >= 5000000n &&
     entryAmount <= 500000000n &&
-    entryAmount <= planningAmount / 5n;
+    (!validBudget || entryAmount <= planningAmount! / 5n);
+  const validAmounts = validBudget && validEntry;
+  const validTrader = address.safeParse(trader.trim()).success;
+  const activePlan = !!plan && !ended;
+  const currentStep = activePlan
+    ? plan.status === "watching" && plan.cursor
+      ? 4
+      : 3
+    : !validTrader
+      ? 1
+      : !validAmounts
+        ? 2
+        : 3;
+  const nextStep = !snapshot
+    ? {
+        title: error
+          ? "Your plan could not be loaded"
+          : "Loading your saved plan",
+        reason: error
+          ? "Use Reload status below to try again."
+          : "Your private plan will appear after your account is checked.",
+        href: null,
+        action: "",
+      }
+    : activePlan
+      ? plan.status === "paused"
+        ? {
+            title: "Your plan is paused",
+            reason:
+              "Resume watching to look for new fills. Activity during the pause will not become proposals.",
+            href: "#setup-heading",
+            action: "View plan controls",
+          }
+        : !snapshot.collectorEnabled
+          ? {
+              title: "Monitoring is unavailable",
+              reason:
+                "Your saved plan is still here. Watching can continue when monitoring is available again.",
+              href: "#activity-heading",
+              action: "View status",
+            }
+          : !plan.cursor && !plan.error
+            ? {
+                title: "Getting your starting point",
+                reason:
+                  "The first successful check records existing trades. Only new fills after that point can become proposals.",
+                href: "#activity-heading",
+                action: "View activity",
+              }
+            : overdue || plan.error
+              ? {
+                  title: "Check your monitoring status",
+                  reason:
+                    "Recent activity may be delayed or missing. Check the status before relying on a proposal.",
+                  href: "#activity-heading",
+                  action: "View status",
+                }
+              : reviews.length
+                ? {
+                    title: "You have proposals to review",
+                    reason:
+                      "Check the latest price, wallet budget and exit coverage. A proposal is not a trade; approval is unavailable.",
+                    href: "#activity-heading",
+                    action: "Review proposals",
+                  }
+                : {
+                    title: "Watching for the next trade",
+                    reason:
+                      "Hosted monitoring can continue while your plan is active, even after you leave this page. Check the last source-check time when you return. New fills may create proposals or explain skips.",
+                    href: "#activity-heading",
+                    action: "View activity",
+                  }
+      : !validTrader
+        ? {
+            title: "Choose one trader",
+            reason: trader.trim()
+              ? "Enter a valid Solana public wallet address, or choose a trader from discovery."
+              : "Explore public trader records, then bring one wallet here. A high reported profit alone does not prove they are a good trader to copy.",
+            href: "/discover",
+            action: "Find a trader",
+          }
+        : !validAmounts
+          ? {
+              title: "Adjust your planning budget",
+              reason:
+                "Use $25–$1,000,000 for the budget and $5–$500 per entry, within 20% of that budget.",
+              href: validBudget ? "#agent-entry" : "#agent-budget",
+              action: "Adjust limits",
+            }
+          : !snapshot.signedIn
+            ? {
+                title: "Sign in to save your plan",
+                reason:
+                  "Connect your wallet and approve the login message. No deposit is required and signing in does not authorize trading.",
+                href: "#agent-account",
+                action: "Go to sign-in",
+              }
+            : !snapshot.collectorEnabled || !snapshot.providerConfigured
+              ? {
+                  title: "Watching is temporarily unavailable",
+                  reason:
+                    "You can still explore public traders. Try starting your plan again when the service is available.",
+                  href: "/discover",
+                  action: "Explore traders",
+                }
+              : {
+                  title: "Your plan is ready to watch",
+                  reason:
+                    "Starting records a baseline, then watches for new fills. Your budget is a planning limit; no money is deposited or traded.",
+                  href: "#setup-heading",
+                  action: "Review and start",
+                };
   return (
     <>
       <AppHeader badge="BETA" />
@@ -206,23 +319,45 @@ export function AgentWorkspace() {
           </div>
           <span className={styles.mode}>Observation only</span>
         </section>
-        <AccountConnection context="agent" />
         <nav className={styles.journey} aria-label="Copy trading steps">
-          <Link href="/discover">1. Choose a trader</Link>
+          <a
+            href={activePlan ? "/discover" : "#agent-trader"}
+            aria-current={currentStep === 1 ? "step" : undefined}
+          >
+            1. Choose a trader
+          </a>
           <a
             href="#setup-heading"
-            aria-current={!plan || ended ? "step" : undefined}
+            aria-current={currentStep === 2 ? "step" : undefined}
           >
             2. Set your budget
           </a>
           <a
-            href="#activity-heading"
-            aria-current={plan && !ended ? "step" : undefined}
+            href="#setup-heading"
+            aria-current={currentStep === 3 ? "step" : undefined}
           >
-            3. Review new trades
+            3. Start watching
           </a>
-          <Link href="/app">4. Inspect your positions</Link>
+          <a
+            href="#activity-heading"
+            aria-current={currentStep === 4 ? "step" : undefined}
+          >
+            4. Review the results
+          </a>
         </nav>
+        <section className={styles.nextStep} aria-label="Your next step">
+          <div>
+            <p className="eyebrow">YOUR NEXT STEP</p>
+            <h2>{nextStep.title}</h2>
+            <p>{nextStep.reason}</p>
+          </div>
+          {nextStep.href && (
+            <Link href={nextStep.href}>{nextStep.action} →</Link>
+          )}
+        </section>
+        <div id="agent-account">
+          <AccountConnection context="agent" />
+        </div>
         {error && (
           <div role="alert" className={styles.error}>
             <strong>Could not complete this step</strong>
@@ -334,7 +469,13 @@ export function AgentWorkspace() {
                   placeholder="Paste a Solana public address"
                   autoComplete="off"
                   spellCheck={false}
+                  aria-describedby="agent-trader-help"
+                  aria-invalid={!!trader.trim() && !validTrader}
                 />
+                <p id="agent-trader-help" className={styles.note}>
+                  Paste the public address of the trader you want to follow.
+                  Your own wallet is connected separately for sign-in.
+                </p>
                 <Link href="/discover" className={styles.smallLink}>
                   Find a trader →
                 </Link>
@@ -351,6 +492,7 @@ export function AgentWorkspace() {
                       value={budget}
                       disabled={!snapshot || busy}
                       onChange={(event) => setBudget(event.target.value)}
+                      aria-invalid={!validBudget}
                     />
                   </div>
                   <div>
@@ -361,6 +503,7 @@ export function AgentWorkspace() {
                       value={entry}
                       disabled={!snapshot || busy}
                       onChange={(event) => setEntry(event.target.value)}
+                      aria-invalid={!validEntry}
                     />
                   </div>
                 </div>
@@ -370,6 +513,10 @@ export function AgentWorkspace() {
                       key={amount}
                       type="button"
                       disabled={busy || !snapshot}
+                      aria-pressed={
+                        budget === String(amount) &&
+                        entry === String(amount / 10)
+                      }
                       onClick={() => {
                         setBudget(String(amount));
                         setEntry(String(amount / 10));
@@ -388,6 +535,12 @@ export function AgentWorkspace() {
                     deposit or order is made.
                   </p>
                 )}
+                {!validAmounts && (
+                  <p role="status" className={styles.warning}>
+                    Set a budget of $25–$1,000,000 and an entry of $5–$500, no
+                    more than 20% of your budget.
+                  </p>
+                )}
                 <p className={styles.note}>
                   Budget: $25–$1,000,000. Entries: $5–$500, up to 20% of the
                   budget. These are proposal limits, not verified execution
@@ -402,12 +555,16 @@ export function AgentWorkspace() {
                     !snapshot.collectorEnabled ||
                     !snapshot.providerConfigured ||
                     !validAmounts ||
-                    !trader.trim()
+                    !validTrader
                   }
                 >
                   {busy ? "Setting the baseline…" : "Start watching"}
                   <span aria-hidden="true">↗</span>
                 </button>
+                <p className={styles.note}>
+                  What happens next: record existing trades, watch for new
+                  fills, then review proposals and skips. No orders are placed.
+                </p>
                 {!snapshot?.signedIn && (
                   <p className={styles.note}>
                     Sign in above to save your private plan. Login does not
@@ -612,14 +769,22 @@ export function AgentWorkspace() {
               <div className={styles.empty}>
                 <span aria-hidden="true">⌁</span>
                 <h3>
-                  {plan
-                    ? "Waiting for new filled trades."
-                    : "Your trader’s next move starts here."}
+                  {ended
+                    ? "This observation has ended."
+                    : plan?.status === "paused"
+                      ? "Watching is paused."
+                      : plan
+                        ? "Waiting for new filled trades."
+                        : "Your trader’s next move starts here."}
                 </h3>
                 <p>
-                  {plan
-                    ? "The initial history is a baseline, not a queue of old trades to copy. New activity will appear after a successful source check."
-                    : "Choose one wallet and set a planning budget. The agent will explain preliminary entries, skipped opportunities and detected exits."}
+                  {ended
+                    ? "Start a new plan to watch again. Its first check will establish a fresh baseline."
+                    : plan?.status === "paused"
+                      ? "Resume your plan to look for new fills. Trades from the paused period will not become proposals."
+                      : plan
+                        ? "No new proposal yet. The initial history is a baseline, not old trades to copy. New fills may create proposals or be skipped because they exceed your limits. Check the source-check time to confirm monitoring is current."
+                        : "Choose one wallet and set a planning budget. The agent will explain preliminary entries, skipped opportunities and detected exits."}
                 </p>
               </div>
             )}
