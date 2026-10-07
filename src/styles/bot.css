@@ -1,0 +1,120 @@
+/* Prediction-market research workspace */
+.bot-feed-grid,
+.bot-strategies {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 24px 0;
+}
+.bot-main .paper-card {
+  min-width: 0;
+}
+.bot-status {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #edf3ff;
+  color: #2457a7;
+  font-size: 13px;
+  font-weight: 700;
+}
+.bot-plan {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 22px 0;
+}
+.bot-plan label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+.bot-plan input,
+.bot-plan select {
+  padding: 12px;
+  border: 1px solid #c9d4e4;
+  border-radius: 9px;
+  background: white;
+  color: #172944;
+  max-width: 100%;
+}
+.bot-plan button {
+  padding: 13px 18px;
+  background: #245ee8;
+  color: white;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.bot-plan button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.bot-strategies article,
+.bot-markets article {
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.bot-metric {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2457a7;
+}
+.bot-metric small {
+  font-size: 13px;
+  font-weight: 400;
+}
+.bot-muted,
+.bot-main small {
+  color: #65758b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.bot-markets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.bot-prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.bot-prices span {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.bot-prices strong {
+  font-size: 22px;
+}
+.bot-markets details {
+  margin-top: 16px;
+  font-size: 14px;
+}
+.bot-markets summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  .bot-feed-grid,
+  .bot-strategies,
+  .bot-markets {
+    grid-template-columns: 1fr;
+  }
+  .bot-plan {
+    align-items: stretch;
+  }
+  .bot-plan label {
+    width: 100%;
+  }
+  .bot-plan button {
+    width: 100%;
+  }
+}

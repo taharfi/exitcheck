@@ -1,0 +1,44 @@
+{
+  "provider": "polymarket",
+  "marketId": "POLY-601826",
+  "status": "open",
+  "result": null,
+  "marketResultPubkey": null,
+  "title": "Flávio Bolsonaro",
+  "openTime": 1758226086,
+  "closeTime": 1791172740,
+  "isTeamMarket": false,
+  "rulesPrimary": "A presidential election is scheduled to take place in Brazil on October 4, 2026.\n\nThis market will resolve according to the listed candidate that wins this election.\n\nThis market includes any potential second round. If the result of this election isn\u0027t known by June 30, 2027, 11:59 PM ET, the market will resolve to \"Other\".\n\nThis market will resolve based on the result of the election as indicated by a consensus of credible reporting. If there is ambiguity, this market will resolve based solely on the official results as reported by the Brazilian government, specifically the Superior Electoral Court (Tribunal Superior Eleitoral, TSE) (e.g., https://dadosabertos.tse.jus.br/).",
+  "rulesSecondary": "",
+  "resolveAt": null,
+  "pricing": {
+    "buyYesPriceUsd": 568000,
+    "sellYesPriceUsd": 561000,
+    "sellNoPriceUsd": 432000,
+    "buyNoPriceUsd": 439000,
+    "volume": 13204286
+  },
+  "imageUrl": "https://polymarket-upload.s3.us-east-2.amazonaws.com/will-flvio-bolsonaro-win-the-2026-brazilian-presidential-election-LUNiqIvy01pf.jpg",
+  "team": null,
+  "outcomes": ["Yes", "No"],
+  "clobTokenIds": [
+    "109876868437950584369987384406356259939519193117253465815665152916226511121427",
+    "38310927461258927563020508025396887688249787380193911540547071417200646834355"
+  ],
+  "marketOptions": [
+    {
+      "label": "Yes",
+      "buyYes": true
+    },
+    {
+      "label": "No",
+      "buyYes": false
+    }
+  ],
+  "sportsMarketType": null,
+  "sportsLine": null,
+  "periodType": null,
+  "periodNumber": null,
+  "gameNumber": null,
+  "eventId": "POLY-45915"
+}

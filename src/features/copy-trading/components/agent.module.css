@@ -1,0 +1,591 @@
+.main {
+  max-width: 1300px;
+}
+.traderPreview {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #e1e6db;
+  border-radius: 8px;
+  background: #f8faf4;
+  font-size: 11px;
+}
+.traderPreview .checkHeading {
+  flex-wrap: wrap;
+}
+.traderPreview .note {
+  margin: 10px 0 0;
+}
+.recentFills {
+  padding: 0;
+  list-style: none;
+}
+.recentFills li {
+  display: grid;
+  gap: 5px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e1e6db;
+  overflow-wrap: anywhere;
+}
+.recentFills span,
+.recentFills time {
+  color: #697466;
+}
+.intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+.intro h1 {
+  margin: 12px 0;
+  font-size: clamp(32px, 3.3vw, 47px);
+}
+.intro > div > p:last-child {
+  max-width: 640px;
+  color: #697466;
+  font-size: 14px;
+}
+.mode,
+.state {
+  white-space: nowrap;
+  padding: 7px 12px;
+  border: 1px solid #dce5ca;
+  border-radius: 6px;
+  background: #edf3df;
+  color: #4c6339;
+  font-size: 11px;
+  font-weight: 650;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.4fr);
+  gap: 22px;
+  margin-top: 25px;
+  align-items: start;
+}
+.setup,
+.activity {
+  background: #fff;
+  border: 1px solid #e1e6db;
+  border-radius: 14px;
+  padding: 27px;
+}
+.setup h2,
+.activity h2 {
+  font-size: 23px;
+  margin: 7px 0 20px;
+}
+.setup label {
+  display: block;
+  font-size: 11px;
+  font-weight: 650;
+  margin: 18px 0 7px;
+}
+.setup input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  font-size: 13px;
+  border-color: #d9e1d0;
+}
+.setup form > input {
+  font-size: 11px;
+}
+.amountInputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.smallLink {
+  display: inline-block;
+  color: #496333;
+  font-size: 11px;
+  margin: 12px 0 0;
+  text-decoration: none;
+}
+.note {
+  color: #73806a;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 16px 0;
+}
+.primary {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #d8f36a;
+  color: #20271e;
+  border: 1px solid #cbe65f;
+  border-radius: 7px;
+  padding: 13px 17px;
+  font-weight: 650;
+  font-size: 13px;
+  margin: 20px 0 10px;
+}
+.primary > span {
+  font-size: 20px;
+}
+.limits {
+  border-top: 1px solid #e1e6db;
+  padding-top: 15px;
+  margin-top: 22px;
+  font-size: 11px;
+}
+.limits summary,
+.source summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.limits ul {
+  padding-left: 18px;
+  color: #68765e;
+  line-height: 1.8;
+}
+.limits li {
+  margin: 8px 0;
+}
+.activityHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.activityHeading h2 {
+  margin-bottom: 12px;
+}
+.health {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 15px;
+  background: #f7f9f2;
+  border: 1px solid #e5eadc;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 7px 0 20px;
+}
+.health span,
+.health strong {
+  display: block;
+}
+.health span {
+  font-size: 10px;
+  color: #74806b;
+}
+.health strong {
+  font-size: 11px;
+  margin-top: 5px;
+  font-weight: 600;
+}
+.trader {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  background: #f7f9f2;
+  border-radius: 7px;
+}
+.trader span {
+  font-size: 10px;
+  color: #74806b;
+}
+.trader strong {
+  font-size: 15px;
+}
+.facts {
+  margin: 18px 0;
+}
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0e7;
+}
+.facts dt {
+  font-size: 11px;
+  color: #73806a;
+}
+.facts dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.controls button,
+.reviewControls button {
+  padding: 9px 12px;
+  border: 1px solid #dce4d2;
+  border-radius: 6px;
+  background: #f9fbf5;
+  color: #4c6339;
+  font-size: 11px;
+  font-weight: 600;
+}
+.controls button:last-child {
+  background: #fff;
+  color: #8a6251;
+}
+.error,
+.warning {
+  background: #fff7ea;
+  border: 1px solid #edd8b4;
+  border-radius: 8px;
+  color: #845b27;
+  padding: 15px;
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+.error button {
+  background: transparent;
+  color: #845b27;
+  margin-top: 10px;
+  padding: 0;
+  text-decoration: underline;
+}
+.empty {
+  text-align: center;
+  border: 1px dashed #dce4d2;
+  border-radius: 9px;
+  padding: 45px 22px;
+  margin: 14px 0;
+}
+.empty > span {
+  display: block;
+  font-size: 40px;
+  color: #7a8e5a;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.empty h3 {
+  font-size: 17px;
+}
+.empty p {
+  font-size: 12px;
+  color: #74806b;
+  margin-top: 12px;
+}
+.coverage {
+  font-size: 10px;
+  color: #7e8975;
+  border-top: 1px solid #e5eadc;
+  padding-top: 17px;
+  margin-top: 20px;
+  line-height: 1.85;
+}
+.decisions {
+  display: grid;
+  gap: 15px;
+}
+.decision {
+  border: 1px solid #e1e6db;
+  border-radius: 9px;
+  padding: 18px;
+}
+.decisionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 13px;
+}
+.decisionStatus {
+  padding: 4px 8px;
+  border-radius: 5px;
+  color: #6d7863;
+  background: #f0f3eb;
+  font-size: 10px;
+  font-weight: 600;
+}
+.decisionStatus[data-state="review"] {
+  color: #4c6339;
+  background: #e8f3d1;
+}
+.decisionStatus[data-state="exit_signal"] {
+  background: #eef1fa;
+  color: #556589;
+}
+.decisionHeading time {
+  font-size: 9px;
+  color: #7f8975;
+}
+.decision h3 {
+  font-size: 15px;
+}
+.side {
+  font-size: 10px;
+  color: #7e8975;
+  margin-top: 5px;
+}
+.prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 26px;
+  padding: 17px 0;
+}
+.prices span,
+.prices strong {
+  display: block;
+}
+.prices span {
+  font-size: 9px;
+  color: #7e8975;
+}
+.prices strong {
+  font-size: 15px;
+  font-weight: 650;
+  margin-top: 4px;
+}
+.reason {
+  font-size: 11px;
+  color: #68765e;
+  line-height: 1.8;
+}
+.reviewControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.reviewControls small {
+  flex-basis: 100%;
+  font-size: 9px;
+  color: #7e8975;
+}
+.source {
+  font-size: 10px;
+  color: #7e8975;
+  margin-top: 15px;
+}
+.source p {
+  font-size: 10px;
+  margin-top: 10px;
+  line-height: 1.8;
+}
+.source a {
+  display: inline-block;
+  color: #496333;
+  margin-top: 8px;
+}
+.entryReview {
+  margin-top: 16px;
+  padding: 15px;
+  background: #f8faf4;
+  border: 1px solid #e1e7d8;
+  border-radius: 8px;
+}
+.checkHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.assetChoice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+  margin-top: 12px;
+}
+.assetChoice select {
+  padding: 6px 10px;
+  border: 1px solid #dce4d2;
+  background: white;
+  border-radius: 5px;
+  color: #233e48;
+}
+.journey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.journey a {
+  font-size: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e1e7d8;
+  border-radius: 8px;
+  background: white;
+}
+.journey [aria-current="step"] {
+  background: #edf3dc;
+  color: #40532c;
+}
+.journal {
+  margin-top: 24px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e1e7d8;
+  border-radius: 14px;
+}
+.monitoring {
+  margin-top: 24px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e1e7d8;
+  border-radius: 14px;
+}
+.monitoringFacts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 20px 0;
+}
+.monitoringFacts dt {
+  font-size: 11px;
+  color: #68765e;
+}
+.monitoringFacts dd {
+  margin: 5px 0 0;
+  font-size: 16px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.skipReasons {
+  padding: 0;
+  list-style: none;
+}
+.skipReasons li {
+  display: flex;
+  gap: 12px;
+  margin: 10px 0;
+}
+.skipReasons strong {
+  flex-shrink: 0;
+  min-width: 28px;
+  color: #355d43;
+}
+@media (max-width: 1000px) {
+  .monitoringFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 540px) {
+  .monitoring {
+    padding: 21px 18px;
+  }
+  .monitoring .activityHeading {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+.journal h2 {
+  font-size: 23px;
+  margin: 10px 0;
+}
+.journalItem {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #e1e7d8;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.journalItem summary {
+  cursor: pointer;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.checkTime,
+.exitCheck p {
+  font-size: 10px;
+  color: #68765e;
+  line-height: 1.8;
+  margin-top: 10px;
+}
+.checkFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.checkFacts dt {
+  font-size: 9px;
+  color: #68765e;
+}
+.checkFacts dd {
+  font-size: 11px;
+  margin-top: 4px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.checkReason {
+  font-size: 10px;
+  color: #5c6f49;
+  line-height: 1.8;
+}
+.checkReason[data-state="blocked"] {
+  color: #99483a;
+}
+.exitCheck {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e7d8;
+  font-size: 11px;
+}
+@media (max-width: 1150px) {
+  .layout {
+    grid-template-columns: minmax(250px, 0.8fr) minmax(0, 1fr);
+    gap: 16px;
+  }
+  .setup,
+  .activity {
+    padding: 21px;
+  }
+}
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .setup form,
+  .facts,
+  .trader {
+    max-width: 600px;
+  }
+  .primary {
+    max-width: 600px;
+  }
+}
+@media (max-width: 540px) {
+  .intro {
+    flex-direction: column;
+    gap: 17px;
+  }
+  .intro h1 {
+    font-size: 33px;
+  }
+  .intro > div > p:last-child {
+    font-size: 13px;
+  }
+  .setup,
+  .activity {
+    padding: 21px 18px;
+  }
+  .activityHeading {
+    align-items: flex-start;
+  }
+  .activityHeading h2 {
+    font-size: 21px;
+  }
+  .health {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .amountInputs {
+    gap: 10px;
+  }
+  .amountInputs label {
+    font-size: 10px;
+  }
+  .decision {
+    padding: 15px;
+  }
+}

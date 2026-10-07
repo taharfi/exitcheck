@@ -1,0 +1,67 @@
+{
+  "name": "exitcheck",
+  "version": "1.0.0",
+  "description": "Solana prediction-market research, trader discovery and virtual copy-trading",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "next dev --hostname 127.0.0.1",
+    "dev:fixture": "node scripts/dev-fixture.mjs",
+    "build": "next build",
+    "start": "node scripts/start.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "probe": "tsx scripts/probes/jupiter.ts",
+    "verify:secrets": "node scripts/checks/build-secrets.mjs",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:smoke": "node scripts/smoke/run.mjs",
+    "check:structure": "node scripts/checks/structure.mjs",
+    "check": "npm run check:structure && npm run lint && npm run typecheck && npm test",
+    "probe:markets": "tsx scripts/probes/markets.ts",
+    "probe:agent": "tsx scripts/probes/agent.ts",
+    "probe:monitoring": "tsx scripts/probes/agent-monitoring.ts",
+    "probe:agent-review": "tsx scripts/probes/agent-review.ts",
+    "probe:agent-build": "tsx scripts/probes/agent-build.ts",
+    "probe:database": "tsx scripts/probes/database.ts",
+    "audit:dependencies": "node scripts/checks/dependencies.mjs"
+  },
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@solana/wallet-adapter-react": "^0.15.40",
+    "@solana/wallet-adapter-react-ui": "^0.9.40",
+    "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
+    "lossless-json": "^4.3.1",
+    "next": "^16.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tweetnacl": "^1.0.3",
+    "workflow": "^5.1.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.8",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "overrides": {
+    "jayson": "5.0.0",
+    "devalue": "5.9.4",
+    "nanoid@>=4 <6": "5.1.16"
+  },
+  "engines": {
+    "node": ">=24.11.0"
+  }
+}

@@ -1,0 +1,6 @@
+/* Preserve cascade order. Shared shell and feature styles live in src/styles. */
+@import "../styles/foundation.css";
+@import "../styles/research.css";
+@import "../styles/workspaces.css";
+@import "../styles/bot.css";
+@import "../styles/product.css";
