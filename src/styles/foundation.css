@@ -13,13 +13,23 @@
   src: url("/fonts/manrope.ttf") format("truetype");
 }
 :root {
-  --paper: #f7f8f4;
+  --brand-canvas: #f8f9f3;
+  --brand-ink: #20271e;
+  --brand-muted: #626c5b;
+  --brand-border: #dfe4d6;
+  --brand-lime: #d8f36a;
+  --brand-lime-hover: #cbea56;
+  --brand-accent: #496333;
+  --brand-light: #eef2e5;
+  --brand-selected: #eaf3cf;
+  --brand-selected-border: #bdce91;
+  --paper: var(--brand-canvas);
   --white: #fff;
-  --ink: #252e2a;
-  --muted: #687266;
-  --line: #dde2d9;
-  --accent: #355d43;
-  --light: #edf2e9;
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --line: var(--brand-border);
+  --accent: var(--brand-accent);
+  --light: var(--brand-light);
   --amber: #8c5e24;
 }
 * {

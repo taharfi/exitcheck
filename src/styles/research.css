@@ -83,8 +83,8 @@
   margin-top: 8px;
 }
 .paper-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--brand-lime);
+  color: var(--brand-ink);
   border-radius: 8px;
   padding: 13px 22px;
 }

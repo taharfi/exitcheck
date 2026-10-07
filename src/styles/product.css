@@ -17,7 +17,7 @@ body:has(.product-shell) {
   gap: 8px;
   background: #fff;
   border: 0;
-  border-right: 1px solid #e3e8f0;
+  border-right: 1px solid var(--brand-border);
 }
 .product-shell .brand {
   font-size: 20px;
@@ -38,7 +38,7 @@ body:has(.product-shell) {
 }
 .shell-purpose {
   font-size: 12px;
-  color: #69778d;
+  color: var(--brand-muted);
   padding: 0 8px;
   margin-bottom: 28px;
 }
@@ -52,7 +52,7 @@ body:has(.product-shell) {
 }
 .topbar.product-shell nav a,
 .topbar.product-shell:has(+ .paper-main) nav a {
-  color: #59677d;
+  color: var(--brand-muted);
   padding: 12px 14px;
   border-radius: 9px;
   font-size: 13px;
@@ -74,10 +74,10 @@ body:has(.product-shell) {
 .shell-status {
   margin-top: auto;
   padding: 18px 8px 0;
-  border-top: 1px solid #e3e8f0;
+  border-top: 1px solid var(--brand-border);
   font-size: 12px;
   font-weight: 600;
-  color: #26364f;
+  color: var(--brand-ink);
 }
 .shell-status > span {
   display: inline-block;
@@ -88,7 +88,7 @@ body:has(.product-shell) {
   margin-right: 7px;
 }
 .shell-status p {
-  color: #69778d;
+  color: var(--brand-muted);
   font-weight: 400;
   font-size: 11px;
   margin-top: 4px;
@@ -105,7 +105,7 @@ body:has(.product-shell) {
 }
 .overview-mode {
   font-size: 12px;
-  color: #69778d;
+  color: var(--brand-muted);
 }
 .overview-hero {
   display: grid;
@@ -114,7 +114,7 @@ body:has(.product-shell) {
   align-items: center;
   padding: 42px;
   background: #fff;
-  border: 1px solid #e3e8f0;
+  border: 1px solid var(--brand-border);
   border-radius: 22px;
 }
 .overview-hero h1 {
@@ -124,7 +124,7 @@ body:has(.product-shell) {
   margin: 20px 0;
 }
 .overview-hero p {
-  color: #69778d;
+  color: var(--brand-muted);
   max-width: 460px;
   font-size: 15px;
 }
@@ -138,13 +138,13 @@ body:has(.product-shell) {
 .overview-hero small {
   display: block;
   font-size: 11px;
-  color: #69778d;
+  color: var(--brand-muted);
 }
 .overview-budget {
   padding: 26px;
-  border: 1px solid #dce3f5;
+  border: 1px solid var(--brand-border);
   border-radius: 16px;
-  background: #f7f9ff;
+  background: var(--brand-canvas);
 }
 .overview-budget h2 {
   font-size: 27px;
@@ -156,7 +156,7 @@ body:has(.product-shell) {
 .overview-budget label {
   display: block;
   margin: 24px 0 8px;
-  color: #26364f;
+  color: var(--brand-ink);
   font-size: 12px;
   font-weight: 650;
 }
@@ -164,7 +164,7 @@ body:has(.product-shell) {
   display: flex;
   gap: 10px;
   align-items: center;
-  border-bottom: 1px solid #ccd4e5;
+  border-bottom: 1px solid var(--brand-border);
   padding-bottom: 8px;
   font-size: 36px;
   font-weight: 650;
@@ -176,7 +176,7 @@ body:has(.product-shell) {
   background: transparent;
   font-size: 36px;
   font-weight: 650;
-  color: #172339;
+  color: var(--brand-ink);
   padding: 0;
   border-radius: 0;
 }
@@ -188,14 +188,14 @@ body:has(.product-shell) {
 .overview-presets button {
   padding: 6px 12px;
   background: #fff;
-  color: #59677d;
-  border: 1px solid #dce3f5;
+  color: var(--brand-muted);
+  border: 1px solid var(--brand-border);
   border-radius: 7px;
 }
 .overview-presets button[aria-pressed="true"] {
-  color: #2946d3;
-  border-color: #2946d3;
-  background: #eef2ff;
+  color: var(--brand-accent);
+  border-color: var(--brand-accent);
+  background: var(--brand-selected);
 }
 .overview-budget > .paper-primary {
   width: 100%;
@@ -208,7 +208,7 @@ body:has(.product-shell) {
 }
 .overview-journey > a {
   padding: 26px;
-  border: 1px solid #e3e8f0;
+  border: 1px solid var(--brand-border);
   border-radius: 16px;
   background: #fff;
   text-decoration: none;
@@ -218,8 +218,8 @@ body:has(.product-shell) {
 }
 .journey-number {
   font-size: 12px;
-  color: #2946d3;
-  background: #eef2ff;
+  color: var(--brand-accent);
+  background: var(--brand-selected);
   padding: 5px 10px;
   border-radius: 6px;
   margin-bottom: 18px;
@@ -229,16 +229,16 @@ body:has(.product-shell) {
 }
 .overview-journey p {
   font-size: 13px;
-  color: #69778d;
+  color: var(--brand-muted);
   margin: 9px 0 20px;
 }
 .overview-journey strong {
   margin-top: auto;
-  color: #2946d3;
+  color: var(--brand-accent);
   font-size: 12px;
 }
 .overview-evidence {
-  border-top: 1px solid #dce3f5;
+  border-top: 1px solid var(--brand-border);
   padding-top: 28px;
   display: grid;
   grid-template-columns: 1fr 1.2fr;
@@ -249,11 +249,11 @@ body:has(.product-shell) {
   margin-top: 8px;
 }
 .overview-evidence p {
-  color: #69778d;
+  color: var(--brand-muted);
   font-size: 13px;
 }
 .overview-evidence a {
-  color: #2946d3;
+  color: var(--brand-accent);
   font-size: 12px;
 }
 .lab-grid {
@@ -268,24 +268,24 @@ body:has(.product-shell) {
 .lab-grid strong {
   display: block;
   margin-top: 20px;
-  color: #2946d3;
+  color: var(--brand-accent);
   font-size: 12px;
 }
 .paper-intro,
 .discover-hero {
   background: #fff;
-  color: #172339;
-  border: 1px solid #e3e8f0;
+  color: var(--brand-ink);
+  border: 1px solid var(--brand-border);
   padding: 32px;
   border-radius: 16px;
 }
 .paper-intro p,
 .discover-hero p {
-  color: #69778d;
+  color: var(--brand-muted);
 }
 .paper-intro .eyebrow,
 .discover-hero .eyebrow {
-  color: #2946d3;
+  color: var(--brand-accent);
 }
 @media (max-width: 1100px) {
   .overview-hero {
@@ -308,7 +308,7 @@ body:has(.product-shell) {
     padding: 18px 20px;
     gap: 14px;
     border-right: 0;
-    border-bottom: 1px solid #e3e8f0;
+    border-bottom: 1px solid var(--brand-border);
   }
   .shell-purpose,
   .shell-status {

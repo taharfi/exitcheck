@@ -13,8 +13,8 @@
   display: inline-block;
   padding: 6px 10px;
   border-radius: 20px;
-  background: #edf3ff;
-  color: #2457a7;
+  background: var(--brand-light);
+  color: var(--brand-accent);
   font-size: 13px;
   font-weight: 700;
 }
@@ -33,16 +33,16 @@
 .bot-plan input,
 .bot-plan select {
   padding: 12px;
-  border: 1px solid #c9d4e4;
+  border: 1px solid var(--brand-border);
   border-radius: 9px;
   background: white;
-  color: #172944;
+  color: var(--brand-ink);
   max-width: 100%;
 }
 .bot-plan button {
   padding: 13px 18px;
-  background: #245ee8;
-  color: white;
+  background: var(--brand-lime);
+  color: var(--brand-ink);
   border: 0;
   border-radius: 9px;
   cursor: pointer;
@@ -55,7 +55,7 @@
 .bot-strategies article,
 .bot-markets article {
   padding: 20px;
-  border: 1px solid #dbe3ef;
+  border: 1px solid var(--brand-border);
   border-radius: 14px;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -63,7 +63,7 @@
 .bot-metric {
   font-size: 32px;
   font-weight: 700;
-  color: #2457a7;
+  color: var(--brand-accent);
 }
 .bot-metric small {
   font-size: 13px;
@@ -71,7 +71,7 @@
 }
 .bot-muted,
 .bot-main small {
-  color: #65758b;
+  color: var(--brand-muted);
   font-size: 13px;
   line-height: 1.6;
 }

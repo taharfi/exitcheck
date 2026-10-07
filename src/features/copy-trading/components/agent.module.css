@@ -306,8 +306,8 @@
   background: #e8f3d1;
 }
 .decisionStatus[data-state="exit_signal"] {
-  background: #eef1fa;
-  color: #556589;
+  background: var(--brand-light);
+  color: var(--brand-accent);
 }
 .decisionHeading time {
   font-size: 9px;
@@ -400,7 +400,7 @@
   border: 1px solid #dce4d2;
   background: white;
   border-radius: 5px;
-  color: #233e48;
+  color: var(--brand-ink);
 }
 .journey {
   display: flex;
