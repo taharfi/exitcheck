@@ -1,3 +1,6 @@
+"use client";
+import Image from "next/image";
+import { useState } from "react";
 import styles from "./powered-by.module.css";
 
 const services = [
@@ -26,31 +29,104 @@ const services = [
 ] as const;
 
 export function PoweredBy({ panta = false }: { panta?: boolean }) {
+  const [paused, setPaused] = useState(false);
+  const logos: Record<string, string> = {
+    Solana: "solana.png",
+    Jupiter: "jupiter.svg",
+    Polymarket: "polymarket.png",
+    DeepSeek: "deepseek.svg",
+    Turso: "turso.svg",
+    Vercel: "vercel.ico",
+    "Next.js": "nextjs.ico",
+    React: "react.svg",
+    Phantom: "phantom.svg",
+    Solflare: "solflare.svg",
+    Panta: "panta.svg",
+  };
+  const credits = panta
+    ? [
+        {
+          name: "Panta",
+          href: "https://panta.market",
+          role: "Solana market research",
+        },
+        ...services,
+      ]
+    : services;
   return (
     <section className={styles.credits} aria-label="Technology credits">
-      <span className={styles.label}>Powered by</span>
-      <div className={styles.links}>
-        {panta && (
-          <a
-            href="https://panta.market"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.panta}
+      <div className={styles.heading}>
+        <div className={styles.title}>
+          <span className={styles.label}>Powered by</span>
+          {panta && (
+            <a
+              className={styles.panta}
+              href="https://panta.market"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Powered by Panta <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
+        <button
+          className={styles.control}
+          type="button"
+          aria-label={paused ? "Resume logo scrolling" : "Pause logo scrolling"}
+          onClick={() => setPaused((value) => !value)}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="currentColor"
+            aria-hidden="true"
           >
-            Powered by Panta
-          </a>
-        )}
-        {services.map((service) => (
-          <a
-            key={service.name}
-            href={service.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={service.role}
-          >
-            {service.name}
-          </a>
-        ))}
+            {paused ? (
+              <path d="M3 1.5 10 6l-7 4.5z" />
+            ) : (
+              <>
+                <rect x="2" y="1.5" width="3" height="9" rx=".5" />
+                <rect x="7" y="1.5" width="3" height="9" rx=".5" />
+              </>
+            )}
+          </svg>
+          {paused ? "Play" : "Pause"}
+        </button>
+      </div>
+      <div className={styles.viewport}>
+        <div className={`${styles.track} ${paused ? styles.paused : ""}`}>
+          {[false, true].map((duplicate) => (
+            <div
+              className={`${styles.group} ${duplicate ? styles.duplicate : ""}`}
+              key={String(duplicate)}
+              aria-hidden={duplicate || undefined}
+            >
+              {credits.map((service) => (
+                <a
+                  className={styles.logoCard}
+                  key={service.name}
+                  href={service.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={service.role}
+                  tabIndex={duplicate ? -1 : undefined}
+                >
+                  <Image
+                    src={`/logos/${logos[service.name]}`}
+                    width={26}
+                    height={26}
+                    alt=""
+                    unoptimized
+                    loading="eager"
+                    className={`${styles.logo} ${["Solana", "Jupiter"].includes(service.name) ? styles.darkLogo : ""}`}
+                  />
+                  <span>{service.name}</span>
+                </a>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
       <small>
         Primary-source context:{" "}
