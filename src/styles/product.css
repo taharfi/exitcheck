@@ -71,6 +71,38 @@ body:has(.product-shell) {
   margin-top: 22px;
   padding: 0 8px;
 }
+/* Account cards also sit in the narrow navigation rail. */
+.shell-actions,
+.shell-actions .account-connection,
+.shell-actions .account-connection > div {
+  min-width: 0;
+  max-width: 100%;
+}
+.shell-actions .account-connection {
+  width: 100%;
+  padding: 16px 14px;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+.shell-actions .account-connection > div:first-child {
+  min-width: 0;
+  flex-basis: 100%;
+}
+.shell-actions .account-actions {
+  width: 100%;
+  min-width: 0;
+}
+.shell-actions button {
+  max-width: 100%;
+  height: auto;
+  min-height: 40px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.topbar.product-shell {
+  overflow-y: auto;
+}
 .shell-status {
   margin-top: auto;
   padding: 18px 8px 0;

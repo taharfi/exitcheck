@@ -387,7 +387,3 @@ export async function reconcile(action: PreparedAction) {
   await saveAction(action);
   return action;
 }
-export const minimumGross = (a: PreparedAction) =>
-  a.minSellPrice === null
-    ? null
-    : ((units(a.quantity) * units(a.minSellPrice)) / SCALE).toString();

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
-import { ExitIllustration } from "./exit-illustration";
+import { LiveMarketPreview } from "./live-market-preview";
 import styles from "./landing.module.css";
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -10,11 +10,23 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 const questions = [
   [
     "Do I need to connect a wallet?",
-    "You can look up a public Solana address without connecting a wallet or signing a message. Wallet connection is optional for checking positions.",
+    "Browse markets, run research and try terminal paper orders without a wallet. Sign in to save private experiments and reopen them on another browser. Public Solana position lookup does not require connecting.",
   ],
   [
-    "Which positions can I check?",
-    "ExitCheck currently reads supported Jupiter Prediction positions on Solana. An empty result does not describe every asset or prediction position in your wallet.",
+    "Are the markets and balances real?",
+    "Market quotes come from live Polymarket and Jupiter feeds. Missing data stays unavailable. The $10,000 paper balance and practice orders are simulated; they are not wallet funds. Position lookup covers supported Jupiter Prediction positions on Solana.",
+  ],
+  [
+    "What does the AI research verify?",
+    "DeepSeek analyzes contract rules and, for supported crypto, Federal Reserve and OpenAI topics, bounded primary-source context. Sources carry retrieval times; context does not prove an outcome or calibrated edge. Unsupported directional forecasts stay withheld.",
+  ],
+  [
+    "How do the three paper strategies work?",
+    "The baseline buys YES on eligible high-volume markets. The liquidity filter adds a reported liquidity threshold. The evidence strategy holds cash until independent research is available. Each receives roughly one-third of the paper budget, with entry and position limits. These are test templates, not proven profitable strategies.",
+  ],
+  [
+    "Are experiments automatic or historical backtests?",
+    "No. Press Check live markets to record forward observations; checks do not run in the background. Quotes and skipped decisions are saved privately. Ending an experiment leaves positions marked and unsettled; missing quotes stay stale. Simulated slippage is included, trading fees are excluded. A short experiment cannot prove future performance.",
   ],
   [
     "Is the exit estimate a guaranteed payout?",
@@ -22,7 +34,7 @@ const questions = [
   ],
   [
     "Does ExitCheck automatically trade for me?",
-    "No. This version focuses on position lookup, exit estimates and research. Live execution is disabled, and virtual copy-trading tools do not place real trades.",
+    "No. Agents assist research; all orders are simulated and live execution is disabled. Saved experiments advance only when you press Check live markets. Approving a paper plan never authorizes a funded trade.",
   ],
 ] as const;
 
@@ -41,6 +53,7 @@ export function LandingPage() {
           <Link href="/trade">
             Trade &amp; Research <span className={styles.beta}>BETA</span>
           </Link>
+          <Link href="/experiments">Paper experiments</Link>
           <a href="#product">The product</a>
           <a href="#how-it-works">How it works</a>
           <a href="#questions">FAQ</a>
@@ -53,43 +66,43 @@ export function LandingPage() {
         <section className={styles.hero} aria-labelledby="hero-heading">
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>
-              <span className={styles.statusDot} /> A CLEARER VIEW OF SOLANA
-              PREDICTIONS
+              <span className={styles.statusDot} /> PREDICTION RESEARCH. CLARITY
+              BEFORE ACTION.
             </p>
             <h1 id="hero-heading">
-              Know your <br />
-              position. <br />
-              <span>
-                Understand <br />
-                your exit.
-              </span>
+              Research the trade. <br />
+              <span>Understand the exit.</span>
             </h1>
             <p className={styles.heroDescription}>
-              Your position has a price. Getting out has a cost. See your
-              prediction positions and check what your exit size could actually
-              return.
+              Explore live prediction markets, challenge a thesis with concise
+              AI analysis, and test a paper budget across three strategies.
+              Check available exit liquidity before deciding your next move.
             </p>
             <div className={styles.heroActions}>
-              <Link className={styles.primary} href="/app">
-                Check my positions <Arrow diagonal />
+              <Link className={styles.primary} href="/trade">
+                Explore live markets <Arrow diagonal />
               </Link>
-              <a className={styles.textLink} href="#how-it-works">
-                See how it works <Arrow />
-              </a>
+              <Link className={styles.textLink} href="/app">
+                Check my positions <Arrow />
+              </Link>
+              <Link className={styles.textLink} href="/experiments">
+                Test a paper budget <Arrow />
+              </Link>
             </div>
             <p className={styles.heroFootnote}>
-              Start with a public wallet address. No signature needed.
+              Explore without a wallet. Sign in to save experiments. No real
+              orders.
             </p>
           </div>
           <div className={styles.heroVisual}>
             <div className={styles.visualEyebrow}>
-              <span>THE PRICE IS ONLY PART OF THE PICTURE</span>
+              <span>LIVE QUOTES. SIMULATED TRADES.</span>
               <span aria-hidden="true">↓</span>
             </div>
-            <ExitIllustration />
+            <LiveMarketPreview />
             <div className={styles.visualCaption}>
               <span className={styles.captionLine} />
-              <p>Try a different size. Watch the estimate change.</p>
+              <p>Read the rules. Compare experiments. Check the exit.</p>
             </div>
           </div>
         </section>
@@ -98,13 +111,13 @@ export function LandingPage() {
             <span aria-hidden="true">◎</span> Built for Solana
           </span>
           <span>
-            <span aria-hidden="true">↗</span> Jupiter Prediction positions
+            <span aria-hidden="true">↗</span> Live Polymarket & Jupiter data
           </span>
           <span>
-            <span aria-hidden="true">◈</span> Read-only position lookup
+            <span aria-hidden="true">◈</span> Concise AI rules analysis
           </span>
           <span>
-            <span aria-hidden="true">≋</span> Estimates based on bid depth
+            <span aria-hidden="true">≋</span> Saved paper experiments
           </span>
         </div>
         <section
@@ -120,8 +133,8 @@ export function LandingPage() {
               number on the screen.
             </h2>
             <p>
-              A reference price values a position. An exit check looks at the
-              bids available for the amount you want to sell.
+              Understand contract rules, test a repeatable paper plan and
+              compare available bids before making your next decision.
             </p>
           </div>
           <div className={styles.featureGrid}>
@@ -129,12 +142,15 @@ export function LandingPage() {
               <span className={styles.featureIcon} aria-hidden="true">
                 ◎
               </span>
-              <h3>See what you hold.</h3>
+              <h3>Research the prediction.</h3>
               <p>
-                Bring supported positions into one workspace. Inspect the event,
-                outcome, size and current state.
+                Search live Polymarket and Jupiter contracts. Get a brief bull
+                case, bear case, key risk and next check. Rules-only analysis
+                waits when independent evidence is missing.
               </p>
-              <span className={styles.featureLabel}>POSITION CLARITY</span>
+              <span className={styles.featureLabel}>
+                RULES, RISKS & NEXT CHECK
+              </span>
             </article>
             <article>
               <span className={styles.featureIcon} aria-hidden="true">
@@ -151,12 +167,15 @@ export function LandingPage() {
               <span className={styles.featureIcon} aria-hidden="true">
                 ⌁
               </span>
-              <h3>Know the limits.</h3>
+              <h3>Compare a paper budget.</h3>
               <p>
-                Review fees, freshness and missing data alongside an estimate,
-                before deciding your next move.
+                Describe a budget and duration, approve three fixed strategies,
+                and save the experiment to your wallet account. Compare cash,
+                marked equity and observed drawdown using fresh manual checks.
               </p>
-              <span className={styles.featureLabel}>CONTEXT BEFORE ACTION</span>
+              <span className={styles.featureLabel}>
+                PRIVATE, SAVED EXPERIMENTS
+              </span>
             </article>
           </div>
         </section>
@@ -166,44 +185,49 @@ export function LandingPage() {
           aria-labelledby="workflow-heading"
         >
           <div className={styles.workflowIntro}>
-            <p className={styles.eyebrow}>FROM WALLET TO A CLEARER DECISION</p>
+            <p className={styles.eyebrow}>
+              FROM A QUESTION TO AN OBSERVED RESULT
+            </p>
             <h2 id="workflow-heading">
               Three steps.
               <br />
               Your next move.
             </h2>
-            <Link className={styles.primary} href="/app">
-              Open the workspace <Arrow diagonal />
+            <Link className={styles.primary} href="/experiments">
+              Start a paper experiment <Arrow diagonal />
             </Link>
           </div>
           <ol className={styles.steps}>
             <li>
               <span>01</span>
               <div>
-                <h3>Bring an address.</h3>
+                <h3>Choose a live market.</h3>
                 <p>
-                  Paste a public Solana wallet address or connect your wallet.
-                  Position lookup needs no signature.
+                  Browse live prediction contracts. Read the resolution rules
+                  and check the provider and snapshot time.
                 </p>
               </div>
             </li>
             <li>
               <span>02</span>
               <div>
-                <h3>Choose a position and size.</h3>
+                <h3>Challenge the thesis.</h3>
                 <p>
-                  Inspect a supported prediction position. Check a partial exit
-                  or the full amount against available bids.
+                  Read the AI arguments, key risk and available primary-source
+                  context. Retrieved facts do not establish a reliable
+                  probability edge.
                 </p>
               </div>
             </li>
             <li>
               <span>03</span>
               <div>
-                <h3>Read the estimate.</h3>
+                <h3>Test a plan. Check the exit.</h3>
                 <p>
-                  Review proceeds, liquidity and costs. An estimate gives you
-                  context; it doesn’t guarantee a fill.
+                  Review a paper order, save its decision receipt and inspect
+                  exit bids where supported. Close against available bids or
+                  record a provider-confirmed settlement. Neither a marked paper
+                  profit nor an exit estimate guarantees a real fill.
                 </p>
               </div>
             </li>
@@ -211,15 +235,19 @@ export function LandingPage() {
         </section>
         <section className={styles.research} aria-labelledby="research-heading">
           <div>
-            <p className={styles.eyebrow}>ROOM TO EXPLORE</p>
-            <h2 id="research-heading">Curious about copying traders?</h2>
+            <p className={styles.eyebrow}>
+              ONE BUDGET. THREE FIXED STRATEGIES.
+            </p>
+            <h2 id="research-heading">What would you test with $300?</h2>
             <p>
-              Explore public wallets, replay a virtual budget and observe a
-              paper portfolio. Keep assumptions and data gaps in view.
+              Try: &quot;Test $300 across 3 strategies for 7 days.&quot; Split a
+              paper budget between a market baseline, an evidence threshold and
+              a liquidity filter. The evidence strategy stays in cash until
+              independent research is connected.
             </p>
           </div>
-          <Link className={styles.textLink} href="/research">
-            Explore research tools <Arrow />
+          <Link className={styles.textLink} href="/experiments">
+            Compare paper strategies <Arrow />
           </Link>
         </section>
         <section
@@ -250,14 +278,14 @@ export function LandingPage() {
         <section className={styles.finalCta} aria-labelledby="cta-heading">
           <span className={styles.eyebrow}>CLARITY BEFORE YOU ACT.</span>
           <h2 id="cta-heading">
-            Check the exit.
+            Research. Test. Observe.
             <br />
-            Then choose your move.
+            Decide with context.
           </h2>
-          <Link className={styles.primary} href="/app">
-            Check my positions <Arrow diagonal />
+          <Link className={styles.primary} href="/experiments">
+            Create a paper experiment <Arrow diagonal />
           </Link>
-          <p>Your address. Your positions. Your decision.</p>
+          <p>Your paper budget. Your limits. Your decision.</p>
           <div className={styles.ctaArt} aria-hidden="true">
             <BrandMark />
           </div>
@@ -273,8 +301,14 @@ export function LandingPage() {
           <Link href="/app">
             App <Arrow diagonal />
           </Link>
-          <Link href="/research">
-            Research <Arrow diagonal />
+          <Link href="/experiments">
+            Experiments <Arrow diagonal />
+          </Link>
+          <Link href="/trade">
+            Markets <Arrow diagonal />
+          </Link>
+          <Link href="/discover">
+            Find traders <Arrow diagonal />
           </Link>
           <a href="#questions">FAQ</a>
         </div>

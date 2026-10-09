@@ -5,6 +5,7 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import { writeFileSync } from "node:fs";
+import { exportLocalBank } from "./prediction-local-bank";
 import { z } from "zod";
 import { JupiterProvider } from "../../src/lib/provider/jupiter";
 import { readWalletFunds } from "../../src/features/copy-trading/agent-wallet";
@@ -12,6 +13,14 @@ import { readLimitedText } from "../../src/lib/read-limited-text";
 import { AppError } from "../../src/lib/errors";
 import { auditBuildSignatures } from "../../src/features/copy-trading/agent-build-signatures";
 import { simulationBalanceChanges } from "../../src/features/copy-trading/agent-simulation-balances";
+import {
+  decodePredictionCreateOrder,
+  PREDICTION_PROGRAM,
+} from "../../src/features/copy-trading/prediction-instruction";
+import {
+  findFillAuthorities,
+  simulateFillPriceBoundary,
+} from "./prediction-fill-simulation";
 import {
   marketSchema,
   integer,
@@ -84,6 +93,9 @@ const buildInput = z.object({
   order: z.object({
     userPubkey: address,
     marketId: z.string(),
+    marketIdHash: z.string(),
+    orderPubkey: address,
+    positionPubkey: address,
     isBuy: z.literal(true),
     isYes: z.literal(true),
     maxBuyPriceUsd: integer.nullable(),
@@ -93,6 +105,16 @@ const buildInput = z.object({
   }),
 });
 try {
+  if (
+    args.includes("--test-price-limit") ||
+    args.includes("--export-local-bank")
+  )
+    stage = "price_limit_reference";
+  const fillAuthorities =
+    args.includes("--test-price-limit") || args.includes("--export-local-bank")
+      ? await findFillAuthorities(rpc())
+      : null;
+  stage = "catalog";
   const catalog = z
     .object({ data: z.array(z.object({ markets: z.array(marketInput) })) })
     .parse(
@@ -200,6 +222,13 @@ try {
   const message = TransactionMessage.decompile(tx.message, {
     addressLookupTableAccounts: tables,
   });
+  const orderInstructions = message.instructions.filter(
+    (i) => i.programId.toBase58() === PREDICTION_PROGRAM,
+  );
+  const decodedOrder =
+    orderInstructions.length === 1
+      ? decodePredictionCreateOrder(orderInstructions[0])
+      : null;
   const fee = await connection.getFeeForMessage(tx.message, "confirmed");
   if (fee.value !== null && (!Number.isSafeInteger(fee.value) || fee.value < 0))
     throw Error("RPC fee is not an exact nonnegative amount.");
@@ -251,6 +280,34 @@ try {
           USDC,
         )
       : null;
+  if (args.includes("--export-local-bank")) {
+    if (
+      !fillAuthorities ||
+      orderInstructions.length !== 1 ||
+      simulation.value.err ||
+      !simulation.value.accounts
+    )
+      throw Error("No successful order snapshot available.");
+    stage = "local_bank_export";
+    await exportLocalBank(
+      connection,
+      orderInstructions[0],
+      writable,
+      simulation.value.accounts,
+      simulation.context.slot,
+      fillAuthorities.authority,
+      fillAuthorities.secondary,
+    );
+  }
+  const fillPriceBoundary =
+    fillAuthorities && args.includes("--test-price-limit")
+      ? await simulateFillPriceBoundary(
+          connection,
+          message,
+          fillAuthorities,
+          tables,
+        )
+      : null;
   const evidence = {
     evidence: publicWallet
       ? "Unsigned $5 USDC YES build for a user-selected public address (omitted from capture)"
@@ -262,7 +319,17 @@ try {
     walletCheck,
     quotePrice: quoted,
     diagnosticPriceCeiling: limit.toString(),
-    order: { ...build.order, userPubkey: publicWallet ? "omitted" : owner },
+    order: {
+      userPubkey: publicWallet ? "omitted" : owner,
+      marketId: build.order.marketId,
+      marketIdHash: build.order.marketIdHash,
+      isBuy: build.order.isBuy,
+      isYes: build.order.isYes,
+      maxBuyPriceUsd: build.order.maxBuyPriceUsd,
+      orderCostUsd: build.order.orderCostUsd,
+      estimatedTotalFeeUsd: build.order.estimatedTotalFeeUsd,
+      contractsMicro: build.order.contractsMicro,
+    },
     transaction: {
       feePayerMatches: tx.message.staticAccountKeys[0]?.toBase58() === owner,
       ownerIsSigner: signers.includes(owner),
@@ -274,6 +341,46 @@ try {
       blockhashMatches: tx.message.recentBlockhash === build.txMeta.blockhash,
       additionalSigners: signers.filter((s) => s !== owner),
       signatureAudit,
+      decodedOrder: decodedOrder
+        ? {
+            marketId: decodedOrder.marketId,
+            isYes: decodedOrder.isYes,
+            isBuy: decodedOrder.isBuy,
+            contractsRaw: decodedOrder.contracts,
+            maxFillPriceUsd: decodedOrder.maxFillPriceUsd,
+            settlementDepositRaw: decodedOrder.depositAmount,
+            orderType: decodedOrder.orderType,
+            integratorFeeBps: decodedOrder.integratorFeeBps,
+            ownerMatches: decodedOrder.accounts.owner === owner,
+            payerMatches: decodedOrder.accounts.payer === owner,
+            authorityIsSuppliedSigner: signatureAudit.additionalSigners.some(
+              (s) =>
+                s.key === decodedOrder.accounts.authority && s.signatureValid,
+            ),
+            settlementMint: decodedOrder.accounts.settlementMint,
+            priceMatchesMetadata:
+              decodedOrder.maxFillPriceUsd === build.order.maxBuyPriceUsd,
+            priceWithinDiagnosticCeiling:
+              BigInt(decodedOrder.maxFillPriceUsd) <= limit,
+            encodedMarketMatchesProviderHash:
+              decodedOrder.marketId === build.order.marketIdHash,
+            orderAddressMatches:
+              decodedOrder.accounts.order === build.order.orderPubkey,
+            positionAddressMatches:
+              decodedOrder.accounts.position === build.order.positionPubkey,
+          }
+        : null,
+      instructionShapes: message.instructions.map((i) => ({
+        program: i.programId.toBase58(),
+        dataBytes: i.data.length,
+        discriminatorHex: i.data.subarray(0, 8).toString("hex"),
+        accounts: i.keys.length,
+        swapRoutePrefix:
+          i.programId.toBase58() ===
+          "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+            ? Array.from(i.data.subarray(8, i.data.length - 19))
+            : null,
+      })),
       programIds: [
         ...new Set(message.instructions.map((i) => i.programId.toBase58())),
       ],
@@ -305,6 +412,7 @@ try {
         "Simulation-only account changes; different slots may include unrelated changes. Not an enforced spending cap or complete future keeper costs.",
     },
     signingEnabled: false,
+    fillPriceBoundary,
     approvalReadiness: {
       status: "blocked",
       instructionSemanticsVerified: false,
@@ -313,8 +421,8 @@ try {
         "Unsigned simulation is spending evidence, not instruction authorization. No wallet approval payload is exposed.",
     },
     unresolved: [
-      "Instruction contents, deposit debit and signer roles need verification against the maintained program specification.",
-      "No requested buy-price ceiling is documented; returned metadata does not prove enforcement in the transaction.",
+      "Create-order schema is decoded; independent market mapping, account policy and the complete deposit swap still need verification.",
+      "An encoded maximum-fill-price field is present, but separate local keeper controls have not demonstrated its enforcement; no requested buy-price ceiling is documented.",
       "Fees/rent, executable buy depth, balances and open-order reconciliation remain prerequisites.",
       "Unsigned simulation omits signature verification and does not prove execution or keeper fill; wallet approval, submission and fill tracking are untested.",
     ],

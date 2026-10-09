@@ -10,6 +10,8 @@ import {
   type FeedMarket,
 } from "./market-feeds";
 export type MarketPoint = {
+  exitDepth?: import("@/features/exits/types").Depth;
+  depthError?: string;
   at: number;
   routeAt?: number;
   externalAt?: number | null;
@@ -95,9 +97,10 @@ export async function collectMarkets(
   loader = loadFeed,
   underlying = underlyingMarket,
   refresh = refreshRoute,
+  enrich: (point: MarketPoint) => Promise<MarketPoint> = async (point) => point,
 ) {
   const token = await store.acquire(Date.now());
-  if (!token) return;
+  if (!token) return { collected: false, reason: "Collector already running." };
   try {
     const feeds = await Promise.all([
       loader("jupiter"),
@@ -158,14 +161,16 @@ export async function collectMarkets(
               independent: false,
               reason: "Direct underlying market unavailable. Entry blocked.",
             };
-      await store.append({
-        at: Date.now(),
-        routeAt,
-        externalAt: external ? Date.now() : null,
-        route: current,
-        external,
-        ...checked,
-      });
+      await store.append(
+        await enrich({
+          at: Date.now(),
+          routeAt,
+          externalAt: external ? Date.now() : null,
+          route: current,
+          external,
+          ...checked,
+        }),
+      );
     }
     await store.db
       .prepare("DELETE FROM market_points WHERE at<?")
@@ -173,6 +178,7 @@ export async function collectMarkets(
     await store.db.exec(
       "DELETE FROM market_points WHERE id < (SELECT MAX(id)-9999 FROM market_points)",
     );
+    return { collected: true, cohort: routes.length };
   } finally {
     await store.release(token);
   }

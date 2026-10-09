@@ -1073,3 +1073,56 @@
     transform: none;
   }
 }
+
+.livePreview {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 18px 60px #20271e0a;
+}
+.previewHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--subtle);
+  margin-bottom: 18px;
+}
+.previewMarket {
+  display: block;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+}
+.previewMarket small,
+.livePreview > small {
+  display: block;
+  color: var(--subtle);
+  font-size: 10px;
+}
+.previewMarket h3 {
+  font-size: 17px;
+  line-height: 1.45;
+  margin: 8px 0 14px;
+}
+.previewMarket > div {
+  display: flex;
+  gap: 28px;
+  font-size: 11px;
+  color: var(--subtle);
+}
+.previewMarket b {
+  color: var(--ink);
+  font-size: 19px;
+  margin-left: 8px;
+}
+.previewCta {
+  display: block;
+  background: var(--lime);
+  color: var(--ink);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 18px 0 12px;
+  font-weight: 700;
+}

@@ -2,7 +2,7 @@ import { z } from "zod";
 export const marketItemSchema = z.object({
   id: z.string().min(1).max(150),
   question: z.string().min(1).max(1000),
-  category: z.enum(["Crypto", "Macro", "Tech", "Other"]),
+  category: z.enum(["Crypto", "Macro", "Tech", "Sports", "Other"]),
   source: z.enum(["polymarket", "solana"]),
   dataProvider: z.enum(["gamma", "jupiter"]),
   yesPrice: z.number().finite().min(0).max(1).nullable(),
@@ -12,11 +12,15 @@ export const marketItemSchema = z.object({
   resolutionDate: z.string().datetime(),
   rules: z.string().max(15000),
   oracleSource: z.string().max(300),
-  url: z.string().url(),
+  url: z
+    .string()
+    .url()
+    .refine((v) => new URL(v).protocol === "https:"),
   capturedAt: z.number().int(),
   tokenIds: z.array(z.string().max(100)).max(2),
   providerId: z.string().max(150),
   tradable: z.boolean(),
+  eventKey: z.string().max(200).optional(),
 });
 export type MarketItem = z.infer<typeof marketItemSchema>;
 export const citationSchema = z.object({
@@ -28,6 +32,7 @@ export const citationSchema = z.object({
     .refine((v) => new URL(v).protocol === "https:"),
   summary: z.string().max(1000),
   reliability: z.number().min(0).max(1),
+  capturedAt: z.number().int().optional(),
 });
 export const researchSchema = z.object({
   marketId: z.string(),
@@ -39,12 +44,13 @@ export const researchSchema = z.object({
   bearThesis: z.array(z.string().max(1500)).max(6),
   citations: z.array(citationSchema).max(12),
   whyThisCouldBeWrong: z.string().max(3000),
+  nextCheck: z.string().max(400).optional(),
   proposedTrade: z.object({
     action: z.enum(["BUY_YES", "BUY_NO", "PASS"]),
     limitPrice: z.number().min(0).max(1),
     kellyExposureUSD: z.number().min(0).max(200),
   }),
-  mode: z.enum(["gemini", "heuristic"]),
+  mode: z.enum(["gemini", "deepseek", "heuristic"]),
   notice: z.string(),
   capturedAt: z.number(),
   agents: z
@@ -59,7 +65,7 @@ export const researchSchema = z.object({
 });
 export type ResearchResult = z.infer<typeof researchSchema>;
 export const marketFeedSchema = z.object({
-  markets: z.array(marketItemSchema).max(100),
+  markets: z.array(marketItemSchema).max(1100),
   warnings: z.array(z.string()),
   capturedAt: z.number(),
 });

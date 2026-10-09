@@ -1,53 +1,65 @@
 # ExitCheck
 
-Solana prediction-market position checks, public trader research and a wallet-linked copy-agent workspace.
+Research a prediction market, inspect available exit liquidity, practice a trade and review the result.
 
-Live app: https://exitcheck.xyz
+Live product: [exitcheck.xyz](https://exitcheck.xyz) · [Research and paper terminal](https://exitcheck.xyz/trade)
 
-## Current scope
+## Current product
 
-- Inspect positions and estimate proceeds for an exit size against current bids.
-- Discover and compare public traders; replay history with explicit assumptions.
-- Sign in with a wallet message to manage private observation plans and decision journals.
-- Monitor filled trades and review indicative entry prices, wallet budgets and exit coverage.
-- Explore live prediction markets at `/trade`, compare bull/bear/synthesis research and practice guarded paper orders. Paper balances are stored only in the current browser.
+- Live prediction-market feeds from Polymarket Gamma/CLOB and Jupiter, with provider labels and quote timestamps.
+- A simplified **Choose → Research → Practice** terminal. Evidence, risk checks, fee settings, journal and alerts expand when needed.
+- DeepSeek research with bounded primary-source context. Unsupported evidence stays unknown; uncalibrated analysis does not justify a directional recommendation.
+- Size-aware exit previews against current bids. Quotes and depth expire; missing liquidity is never fabricated.
+- Paper orders with human approval, an emergency stop, market/portfolio limits and recognized shared-event caps.
+- Compatible paper journals with partial closes, realized results, decision receipts, export and optional wallet-authenticated private backups.
+- Provider-confirmed paper settlement where supported. Winning outcomes are never inferred from near-one-dollar prices.
+- Browser watch alerts while the page is open and visible; these are not background notifications.
+- Solana position inspection, public trader research and wallet-linked copy-agent observation.
+- Private paper experiments and a strategy-study workspace with explicit observation and simulation limits.
 
-**Copy-agent trading is disabled.** Login signatures do not authorize trades. Unsigned diagnostics can simulate builds, but instruction semantics, enforced price limits, full costs and the funded trading lifecycle remain unverified. No profitability guarantee is made.
+**Funded execution is disabled.** Wallet login messages authenticate an account; they do not authorize trades. Paper orders/results are simulations, not proof of achievable live performance. Actual venue fees remain unknown; the terminal offers an explicit optional paper fee assumption. No profitable strategy, calibrated forecast or autonomous funded lifecycle is claimed.
 
-## Local setup
+## Run locally
 
-Requires Node 24.11+ and npm.
+Requires Node **24.11+** and npm.
 
 ```sh
 npm ci
 cp .env.example .env.local
-```
-
-On PowerShell use `Copy-Item .env.example .env.local`. Configure your own server-only Jupiter API key and Solana mainnet RPC URL in that file. Never enter a seed phrase or private key. Keep `ENABLE_LIVE_EXECUTION=false`.
-
-Optionally configure `GEMINI_API_KEY` for Gemini 3.8 Flash research with Google Search grounding. Missing keys or invalid/unsupported research produce a labelled market-prior baseline with a PASS proposal. Model confidence and reliability scores are not independently verified. Research requests use per-instance rate/concurrency limits and may incur provider charges. Paper orders require confirmation, obey the kill switch and cap exposure at $200 per market / $2,000 total. Polymarket and Jupiter feeds remain labelled by provider; missing quotes and depth are never fabricated.
-
-```sh
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. For isolated, labelled development examples use `npm run dev:fixture`.
+On PowerShell, use `Copy-Item .env.example .env.local`. Do not overwrite an existing local configuration. Open http://127.0.0.1:3000.
 
-## Verification
+Configure your own server-only Jupiter key and Solana RPC URL using the blank template. Optional DeepSeek/Gemini research settings are described in `.env.example`; Set `RESEARCH_PROVIDER=deepseek` when supplying `DEEPSEEK_API_KEY`; Gemini is also supported. Never supply a seed phrase or private key. Keep `ENABLE_LIVE_EXECUTION=false`.
+
+Production build:
+
+```sh
+npm run build
+npm start
+```
+
+Local development can use the deployed public market feed when direct Gamma connections fail, preserving original timestamps. Production does not call itself. Isolated development fixtures are available through `npm run dev:fixture`; fixtures are not production data.
+
+## Verify
 
 ```sh
 npm run check
 npm run build
+npm run verify:secrets
 ```
 
-Optional browser tests require `npx playwright install chromium`. Run `npm run test:smoke` or `npm run test:e2e`. Tests use isolated stores; opt-in provider probes make external requests and should be run only with a public address you intend to inspect.
+Optional browser checks require Chromium: `npx playwright install chromium`, then `npm run test:e2e`. Browser tests use controlled providers to check UI behaviour; they do not prove provider uptime, profitability or funded execution. Live probes are opt-in. Tests use isolated stores.
 
-## Hosting
+## Hosting and data
 
-Vercel deployments require your own server-only Jupiter/RPC configuration, Turso database URL and auth token, app origin and monitoring cron secret. See the blank configuration template in [.env.example](.env.example). Local SQLite is not persistent storage on Vercel. Durable monitoring consumes workflow quotas; verify your hosting limits before enabling it. This repository is not automatically connected to the existing production deployment.
+The live app is hosted on Vercel. Hosted persistence requires your own Turso configuration, app origin, provider credentials and monitoring configuration. Local SQLite is not persistent storage on Vercel. Copy-agent monitoring and terminal watch alerts have different lifecycles: monitoring uses configured hosted workflows; terminal alerts require an open page. Check provider and hosting quotas before enabling collectors.
+
+Private journal backups require wallet authentication and are scoped to that account. Browser paper data remains local until the user explicitly saves a backup. Paper records are user-controlled and are not audited trading history.
 
 ## Repository scope
 
-Includes app source, required assets and font licenses, dependency lockfile, test fixtures, validation scripts and configuration templates. Runtime databases, wallet diagnostic captures, credentials, screenshots, local agent integrations and deployment account metadata are excluded. Historical source-control history was not available; this is a snapshot of the current build. Third-party packages and fonts retain their respective licenses.
+This repository contains the application source, required assets/font licenses, dependency lockfile, configuration templates, tests and validation scripts for the current deployed build. Credentials, runtime databases, personal wallet captures, generated videos/screenshots, local agent integrations and deployment-account metadata are excluded. The production deployment is managed separately from GitHub; pushing this repository does not automatically publish it.
 
-Read [SECURITY.md](SECURITY.md) for execution limitations and credential handling.
+Third-party packages and fonts retain their respective licenses. Read [SECURITY.md](SECURITY.md) for credential handling and execution limitations.

@@ -13,7 +13,7 @@ const changed = () => window.dispatchEvent(new Event("exitcheck-account"));
 export function AccountConnection({
   context = "portfolio",
 }: {
-  context?: "portfolio" | "agent";
+  context?: "portfolio" | "agent" | "experiments";
 }) {
   const { publicKey, signMessage, disconnect, wallet } = useWallet();
   const [user, setUser] = useState<User | null>(null),
@@ -31,26 +31,26 @@ export function AccountConnection({
     current.current = address;
   }, [address]);
   useEffect(() => {
-    const abort = new AbortController();
+    let active = true;
     async function load() {
       try {
         const r = await fetch("/api/auth", {
             cache: "no-store",
-            signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15000)]),
+            signal: AbortSignal.timeout(15000),
           }),
           j = await r.json();
         if (!r.ok) throw Error(j.error?.message ?? "Account unavailable.");
-        if (!abort.signal.aborted) setUser(j.user);
+        if (active) setUser(j.user);
       } catch (e) {
-        if (!abort.signal.aborted)
+        if (active)
           setError(e instanceof Error ? e.message : "Account unavailable.");
       } finally {
-        if (!abort.signal.aborted) setLoading(false);
+        if (active) setLoading(false);
       }
     }
     void load();
     return () => {
-      abort.abort();
+      active = false;
       loginAttempt.current?.abort();
     };
   }, []);
@@ -194,18 +194,24 @@ export function AccountConnection({
                 user.wallet.slice(0, 6) +
                 "…" +
                 user.wallet.slice(-5)
-              : context === "agent"
-                ? "Save your agent plan with your wallet"
-                : "Save your portfolio with your wallet"}
+              : context === "experiments"
+                ? "Save your experiments"
+                : context === "agent"
+                  ? "Save your agent plan with your wallet"
+                  : "Save your portfolio with your wallet"}
         </strong>
         <p>
-          {user
-            ? context === "agent"
-              ? "Your agent plan is private to this wallet. Signing in does not authorize trades."
-              : "Your virtual portfolio is linked to this wallet. Sign in with it on another browser to reopen it."
-            : context === "agent"
-              ? "Connect, then sign a login message to save your observation plan. No funds move."
-              : "Connect, then sign a login message. No funds move. Guest testing is still available."}
+          {context === "experiments"
+            ? user
+              ? "Your paper experiments are private to this wallet."
+              : "Connect and sign in to save. No funds move."
+            : user
+              ? context === "agent"
+                ? "Your agent plan is private to this wallet. Signing in does not authorize trades."
+                : "Your virtual portfolio is linked to this wallet. Sign in with it on another browser to reopen it."
+              : context === "agent"
+                ? "Connect, then sign a login message to save your observation plan. No funds move."
+                : "Connect, then sign a login message. No funds move. Guest testing is still available."}
         </p>
       </div>
       <div className="account-actions">

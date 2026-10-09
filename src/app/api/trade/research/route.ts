@@ -3,7 +3,7 @@ import { endpoint, body } from "@/lib/http";
 import { knownMarket } from "@/features/trade/markets";
 import { boundedResearch } from "@/features/trade/research";
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 90;
 export async function POST(request: Request) {
   return endpoint(request, async () => {
     const input = z

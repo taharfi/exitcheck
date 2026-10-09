@@ -13,6 +13,7 @@ export type FeedMarket = {
   tokenIds: string[];
   outcomes: string[];
   outcome: string | null;
+  resolvedResult?: "yes" | "no" | null;
   status: string;
 };
 export type Feed = {
@@ -126,6 +127,7 @@ export function parseJupiterMarkets(raw: unknown): FeedMarket[] {
                   marketId: text,
                   title: text,
                   status: text,
+                  result: z.enum(["yes", "no"]).nullable().optional(),
                   provider: text,
                   closeTime: z.number(),
                   rulesPrimary: text.default(""),
@@ -164,6 +166,7 @@ export function parseJupiterMarkets(raw: unknown): FeedMarket[] {
         m.marketOptions?.find((o) => o.buyYes)?.label ??
         (m.outcomes?.[0]?.toLowerCase() === "yes" ? m.outcomes[0] : null),
       status: m.status,
+      resolvedResult: m.result ?? null,
     })),
   );
 }

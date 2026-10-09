@@ -3,7 +3,12 @@ import { JupiterProvider } from "@/lib/provider/jupiter";
 import { AppError } from "@/lib/errors";
 import { readLimitedText } from "@/lib/read-limited-text";
 import { address } from "@/lib/provider/schemas";
-import { marketItemSchema, type MarketItem, type MarketFeed } from "./types";
+import {
+  marketItemSchema,
+  marketFeedSchema,
+  type MarketItem,
+  type MarketFeed,
+} from "./types";
 
 export async function publicJson(
   url: string,
@@ -62,11 +67,15 @@ const gammaSchema = z.object({
   clobTokenIds: list.optional(),
   description: z.string().max(15000).default(""),
   category: z.string().nullish(),
+  sportsMarketType: z.string().nullish(),
   volume24hr: numeric.nullish(),
   liquidityNum: numeric.nullish(),
   liquidity: numeric.nullish(),
   acceptingOrders: z.boolean().optional(),
   resolutionSource: z.string().max(300).nullish(),
+  events: z
+    .array(z.object({ id: z.union([z.string(), z.number()]) }))
+    .optional(),
 });
 function category(question: string): MarketItem["category"] {
   if (/bitcoin|btc|ethereum|crypto|solana|\bsol\b|\beth\b/i.test(question))
@@ -117,7 +126,9 @@ export function normalizeGamma(raw: unknown, now = Date.now()): MarketItem[] {
           id: `poly:${m.id}`,
           providerId: m.id,
           question: m.question,
-          category: category(`${m.category ?? ""} ${m.question}`),
+          category: m.sportsMarketType
+            ? "Sports"
+            : category(`${m.category ?? ""} ${m.question}`),
           source: "polymarket",
           dataProvider: "gamma",
           yesPrice: prices[yes],
@@ -134,6 +145,7 @@ export function normalizeGamma(raw: unknown, now = Date.now()): MarketItem[] {
               : [],
           capturedAt: now,
           tradable: m.acceptingOrders === true,
+          eventKey: m.events?.[0] ? `poly-event:${m.events[0].id}` : undefined,
         }),
       ];
     });
@@ -151,6 +163,62 @@ const forecastSchema = z.object({
     .object({ buyYesPriceUsd: z.string().regex(/^\d+$/).nullable() })
     .nullish(),
 });
+// Bounded catalog: ten 100-contract pages, at most three upstream calls at once.
+export async function gammaCatalog(
+  transport: typeof fetch = fetch,
+): Promise<{ markets: MarketItem[]; warnings: string[] }> {
+  const markets: MarketItem[] = [];
+  let failures = 0,
+    successes = 0,
+    end = false;
+  for (let page = 0; page < 10 && !end; page += 3) {
+    const offsets = Array.from(
+      { length: Math.min(3, 10 - page) },
+      (_, index) => (page + index) * 100,
+    );
+    const pages = await Promise.allSettled(
+      offsets.map(async (offset) => {
+        const url = new URL("https://gamma-api.polymarket.com/markets");
+        url.search = new URLSearchParams({
+          limit: "100",
+          offset: String(offset),
+          active: "true",
+          closed: "false",
+          order: "volume24hr",
+          ascending: "false",
+        }).toString();
+        const raw = z
+          .array(z.unknown())
+          .max(100)
+          .parse(await publicJson(url.href, transport));
+        return { rawCount: raw.length, markets: normalizeGamma(raw) };
+      }),
+    );
+    for (const result of pages) {
+      if (result.status === "fulfilled") {
+        successes++;
+        markets.push(...result.value.markets);
+        if (result.value.rawCount < 100) end = true;
+      } else failures++;
+    }
+    if (!successes && failures === pages.length) break;
+  }
+  if (!successes)
+    throw new AppError(
+      "MARKET_DATA_UNAVAILABLE",
+      "Polymarket feed unavailable. Retry shortly.",
+      502,
+    );
+  return {
+    markets: [...new Map(markets.map((m) => [m.id, m])).values()].slice(
+      0,
+      1000,
+    ),
+    warnings: failures
+      ? ["Some Polymarket pages are unavailable; the catalog is incomplete."]
+      : [],
+  };
+}
 async function solanaMarkets(): Promise<MarketItem[]> {
   const response = z
     .object({
@@ -277,24 +345,49 @@ export async function marketFeed(): Promise<MarketFeed> {
   if (cached && Date.now() - cached.capturedAt < 30000) return cached;
   if (pending) return pending;
   pending = (async () => {
-    const results = await Promise.allSettled([
-      publicJson(
-        "https://gamma-api.polymarket.com/markets?limit=25&active=true&closed=false",
-      ).then((v) => normalizeGamma(v)),
-      solanaMarkets(),
-    ]);
+    const results = await Promise.allSettled([gammaCatalog(), solanaMarkets()]);
     const warnings: string[] = [],
       markets: MarketItem[] = [];
-    results.forEach((r, index) => {
-      if (r.status === "fulfilled") markets.push(...r.value);
-      else
+    const gamma = results[0],
+      solana = results[1];
+    if (gamma.status === "fulfilled") {
+      markets.push(...gamma.value.markets);
+      warnings.push(...gamma.value.warnings);
+    } else {
+      // Local network resets must not turn a working deployed data feed into demo data.
+      // Fixed public origin; development only, so production cannot recurse into itself.
+      if (process.env.NODE_ENV === "development") {
+        try {
+          const remote = marketFeedSchema.parse(
+            await publicJson("https://exitcheck.xyz/api/trade?limit=1000"),
+          );
+          const live = remote.markets.filter(
+            (m) =>
+              m.dataProvider === "gamma" &&
+              Date.now() - m.capturedAt < 60000 &&
+              m.capturedAt <= Date.now() + 1000,
+          );
+          markets.push(...live);
+          if (live.length)
+            warnings.push(
+              "Direct Gamma connection unavailable locally. Showing live Polymarket data from ExitCheck's deployed feed, with original timestamps.",
+            );
+        } catch {
+          /* Continue to the explicitly labelled Jupiter fallback. */
+        }
+      }
+      if (!markets.length)
         warnings.push(
-          index === 0
-            ? "Polymarket feed unavailable. Retry shortly."
-            : "Solana feed unavailable. Check Jupiter access or retry shortly.",
+          "Direct Polymarket feed unavailable. Retrying on the next refresh.",
         );
-    });
-    if (results[0].status === "rejected" || results[0].value.length === 0) {
+    }
+    if (solana.status === "fulfilled")
+      markets.push(...solana.value.slice(0, 100));
+    else
+      warnings.push(
+        "Solana feed unavailable. Check Jupiter access or retry shortly.",
+      );
+    if (!markets.some((m) => m.source === "polymarket")) {
       try {
         const backup = await jupiterPolymarket();
         markets.unshift(...backup);
@@ -306,7 +399,14 @@ export async function marketFeed(): Promise<MarketFeed> {
         /* Provider errors remain explicit; never replace them with invented markets. */
       }
     }
-    cached = { markets, warnings, capturedAt: Date.now() };
+    cached = {
+      markets: [...new Map(markets.map((m) => [m.id, m])).values()].slice(
+        0,
+        1100,
+      ),
+      warnings,
+      capturedAt: Date.now(),
+    };
     return cached;
   })();
   try {

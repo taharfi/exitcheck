@@ -1,0 +1,158 @@
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  color: #25382b;
+}
+.main h1 {
+  font-size: clamp(28px, 5vw, 48px);
+}
+.card {
+  background: #fffdf5;
+  border: 1px solid #d6ddcc;
+  border-radius: 20px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.card textarea {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #aebaa5;
+  border-radius: 12px;
+  color: #25382b;
+  background: #f6f7ee;
+}
+.card button {
+  background: #d9f36b;
+  color: #25382b;
+  border: 1px solid #aebaa5;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.card button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.grid article {
+  border-top: 1px solid #d6ddcc;
+  overflow-wrap: anywhere;
+}
+.main p {
+  line-height: 1.6;
+}
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main {
+  width: 100%;
+  min-width: 0;
+  padding: 40px 32px 64px;
+}
+.main h1 {
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  margin: 12px 0;
+  font-size: clamp(30px, 4vw, 48px);
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: #68785b;
+}
+.card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  box-shadow: 0 3px 18px #25382b05;
+}
+.card label {
+  display: block;
+  font-weight: 650;
+}
+.card textarea {
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.card textarea:focus-visible,
+.card button:focus-visible {
+  outline: 2px solid #4b6838;
+  outline-offset: 3px;
+}
+.card button {
+  font-weight: 650;
+  margin-top: 4px;
+  max-width: 100%;
+  white-space: normal;
+}
+.card p {
+  font-size: 14px;
+  color: #65715f;
+  margin: 12px 0;
+}
+.preview {
+  border-top: 1px solid #d6ddcc;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.notes > div {
+  min-width: 0;
+  border: 1px solid #d6ddcc;
+  border-radius: 14px;
+  padding: 18px;
+  background: #f0f4e7;
+}
+.notes strong {
+  font-size: 13px;
+}
+.notes p {
+  font-size: 13px;
+  color: #65715f;
+  margin: 8px 0 0;
+}
+.empty {
+  text-align: center;
+  border: 1px dashed #c7d0bb;
+  border-radius: 18px;
+  padding: 32px 20px;
+  margin-top: 28px;
+}
+.empty h2 {
+  font-size: 18px;
+}
+.empty p {
+  color: #65715f;
+  font-size: 14px;
+}
+@media (max-width: 800px) {
+  .main {
+    padding: 28px 18px 48px;
+  }
+  .notes {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 20px;
+  }
+}

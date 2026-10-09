@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { normalizeGamma } from "../../src/features/trade/markets";
 import {
   emptyPaperAccount,
@@ -10,8 +10,15 @@ import {
   heuristicResearch,
   proposal,
   researchMarket,
+  boundedResearch,
 } from "../../src/features/trade/research";
 import type { MarketItem } from "../../src/features/trade/types";
+beforeEach(() => {
+  vi.stubEnv("RESEARCH_PROVIDER", "gemini");
+  vi.stubEnv("DEEPSEEK_API_KEY", "");
+  vi.stubEnv("GEMINI_MODEL", "gemini-2.5-flash");
+  for (const n of [1, 2, 3]) vi.stubEnv(`GEMINI_API_KEY_${n}`, "");
+});
 const now = 1800000000000;
 const market: MarketItem = {
   id: "poly:test",
@@ -34,6 +41,7 @@ const market: MarketItem = {
 };
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 describe("live market normalization", () => {
@@ -155,6 +163,87 @@ describe("paper risk controls", () => {
   });
 });
 describe("research honesty", () => {
+  it("keeps each report on one rotated key and does not retry quota failures", async () => {
+    vi.stubEnv("GEMINI_API_KEY_1", "rotation-test-one");
+    vi.stubEnv("GEMINI_API_KEY_2", "rotation-test-two");
+    vi.stubEnv("GEMINI_API_KEY_3", "");
+    const transport = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => new Response(null, { status: 429 }));
+    const result = await researchMarket(market, transport);
+    expect(result.notice).toMatch(/quota is exhausted/);
+    await researchMarket(market, transport);
+    expect(transport).toHaveBeenCalledTimes(4);
+    expect(String(transport.mock.calls[0][0])).toContain(
+      "gemini-2.5-flash:generateContent",
+    );
+    expect(
+      transport.mock.calls.map(([, options]) =>
+        new Headers(options?.headers).get("x-goog-api-key"),
+      ),
+    ).toEqual([
+      "rotation-test-one",
+      "rotation-test-one",
+      "rotation-test-two",
+      "rotation-test-two",
+    ]);
+  });
+
+  it("coalesces concurrent paid research for identical canonical market inputs", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "test-only-key");
+    const citations = ["https://example.com/a", "https://example.com/b"].map(
+      (url) => ({
+        title: "Evidence",
+        source: "Source",
+        url,
+        summary: "Claim",
+        reliability: 0.7,
+      }),
+    );
+    const opinion = {
+      probability: 0.7,
+      confidence: 0.7,
+      bullThesis: ["Bull"],
+      bearThesis: ["Bear"],
+      whyThisCouldBeWrong: "Falsification",
+      citations,
+    };
+    const transport = vi.fn(async () =>
+      Response.json({
+        candidates: [
+          {
+            content: { parts: [{ text: JSON.stringify(opinion) }] },
+            groundingMetadata: {
+              groundingChunks: citations.map((c) => ({
+                web: { uri: c.url, title: c.title },
+              })),
+              groundingSupports: [{ groundingChunkIndices: [0, 1] }],
+            },
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", transport);
+    const input = { ...market, id: "poly:coalesced-research" };
+    const [first, second] = await Promise.all([
+      boundedResearch(input, "coalesce-one"),
+      boundedResearch(input, "coalesce-two"),
+    ]);
+    expect(first).toEqual(second);
+    expect(first.mode).toBe("gemini");
+    expect(transport).toHaveBeenCalledTimes(5);
+  });
+  it("keeps the no-key baseline available without consuming paid research quota", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    for (let i = 0; i < 5; i++) {
+      const result = await boundedResearch(
+        { ...market, id: `poly:baseline-${i}` },
+        "baseline-test",
+      );
+      expect(result.mode).toBe("heuristic");
+      expect(result.proposedTrade.action).toBe("PASS");
+    }
+  });
   it("uses a neutral market prior and PASS when Gemini is unavailable", async () => {
     vi.stubEnv("GEMINI_API_KEY", "");
     const transport = vi.fn();
@@ -243,8 +332,8 @@ describe("research honesty", () => {
     const result = await researchMarket(market, transport);
     expect(result.mode).toBe("gemini");
     expect(result.agents).toHaveLength(3);
-    expect(transport).toHaveBeenCalledTimes(3);
-    expect(result.citations[0].reliability).toBe(0.8);
+    expect(transport).toHaveBeenCalledTimes(5);
+    expect(result.citations[0].reliability).toBe(0.7);
     expect(result.proposedTrade.action).toBe("BUY_YES");
   });
 });

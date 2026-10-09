@@ -23,7 +23,9 @@
     "probe:monitoring": "tsx scripts/probes/agent-monitoring.ts",
     "probe:agent-review": "tsx scripts/probes/agent-review.ts",
     "probe:agent-build": "tsx scripts/probes/agent-build.ts",
+    "probe:forecast": "tsx scripts/probes/forecast.ts",
     "probe:database": "tsx scripts/probes/database.ts",
+    "probe:deployment": "tsx scripts/probes/deployment.ts",
     "audit:dependencies": "node scripts/checks/dependencies.mjs"
   },
   "license": "UNLICENSED",

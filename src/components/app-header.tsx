@@ -7,10 +7,8 @@ const navigation = [
   ["/app", "Positions & exits"],
   ["/agent", "Copy agent"],
   ["/trade", "Trade & Research"],
-  ["/research", "Research overview"],
+  ["/experiments", "Paper experiments"],
   ["/discover", "Find traders"],
-  ["/compare", "Test my budget"],
-  ["/shadow", "My observation"],
   ["/lab", "Advanced tools"],
 ] as const;
 export function AppHeader({
@@ -37,7 +35,14 @@ export function AppHeader({
               pathname === href ||
               (href === "/app" && pathname === "/exit") ||
               (href === "/lab" &&
-                ["/bot", "/backtest", "/paper"].includes(pathname))
+                [
+                  "/research",
+                  "/compare",
+                  "/shadow",
+                  "/bot",
+                  "/backtest",
+                  "/paper",
+                ].includes(pathname))
                 ? "page"
                 : undefined
             }

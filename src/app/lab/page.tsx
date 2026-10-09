@@ -2,6 +2,26 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 const tools = [
   [
+    "/strategy-study",
+    "Prediction strategy study",
+    "Record a fixed Solana market cohort, compare fixed strategies chronologically and inspect a mock execution test.",
+  ],
+  [
+    "/research",
+    "Copy-trading overview",
+    "Start with a budget, compare public traders and observe before following.",
+  ],
+  [
+    "/compare",
+    "Compare trader budgets",
+    "Compare historical records and shared exposure for your own budget.",
+  ],
+  [
+    "/shadow",
+    "Persistent paper observation",
+    "Track selected traders with recorded entry and skip explanations across visits.",
+  ],
+  [
     "/backtest",
     "Allocation experiments",
     "Compare three historical allocation rules under the same modeled costs.",
@@ -12,14 +32,9 @@ const tools = [
     "Inspect recorded markets and fixed signal rules. Signal watching does not execute trades.",
   ],
   [
-    "/exit",
-    "Exit checker",
-    "Inspect positions and size-aware exit estimates from available order-book depth.",
-  ],
-  [
     "/paper",
-    "Browser paper portfolio",
-    "Explore a virtual portfolio stored in this browser while the tab is running.",
+    "Legacy browser copy sandbox",
+    "Review the older browser-only copy simulation. Use persistent observation for new trader tracking.",
   ],
 ] as const;
 export default function Page() {
@@ -31,8 +46,9 @@ export default function Page() {
           <p className="eyebrow">ADVANCED TOOLS</p>
           <h1>Go deeper into the evidence.</h1>
           <p>
-            Supporting tools for specific research questions. Start with Find
-            traders and Test my budget for the core workflow.
+            Supporting tools for specific research questions. Use Trade &
+            Research for manual paper orders, or Find traders and Copy agent to
+            observe public traders.
           </p>
         </div>
         <div className="lab-grid">

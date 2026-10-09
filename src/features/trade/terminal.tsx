@@ -6,6 +6,11 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { tradeDecision } from "./decision";
+import { PreTradeCheck } from "./pre-trade-check";
+import { PaperJournal } from "./paper-journal";
+import { Watchlist } from "./watchlist";
+import { GuidedStudy } from "./guided-study";
 import { AppHeader } from "@/components/app-header";
 import { decimal, money } from "@/lib/amounts";
 import {
@@ -135,6 +140,7 @@ export function TradeTerminal() {
   const [selectedId, setSelectedId] = useState(""),
     [query, setQuery] = useState(""),
     [category, setCategory] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(50);
   const [reports, setReports] = useState<Record<string, ResearchResult>>({}),
     [researching, setResearching] = useState(""),
     [researchError, setResearchError] = useState("");
@@ -191,6 +197,16 @@ export function TradeTerminal() {
   }, []);
   const selected = markets.find((m) => m.id === selectedId) ?? markets[0];
   const report = selected ? reports[selected.id] : undefined;
+  const decision =
+    report && selected
+      ? tradeDecision(report, selected, clock || selected.capturedAt)
+      : null;
+  const reportIsStale = Boolean(
+    report &&
+    selected &&
+    (report.marketProbability !== selected.yesPrice ||
+      clock - report.capturedAt > 120000),
+  );
   const shown = markets.filter(
     (m) =>
       (category === "All" || m.category === category) &&
@@ -223,6 +239,7 @@ export function TradeTerminal() {
           shares,
           effectiveLimit,
           clock || selected.capturedAt,
+          account?.feeBps ?? 0,
         ),
         error: "",
       };
@@ -232,7 +249,7 @@ export function TradeTerminal() {
         error: e instanceof Error ? e.message : "Invalid paper order.",
       };
     }
-  }, [selected, side, shares, effectiveLimit, clock]);
+  }, [selected, side, shares, effectiveLimit, clock, account?.feeBps]);
   const [approvedKey, setApprovedKey] = useState("");
   const approvalKey = JSON.stringify([
     selected?.id,
@@ -295,6 +312,8 @@ export function TradeTerminal() {
           effectiveLimit,
           humanApproved,
           id,
+          Date.now(),
+          report,
         );
       });
       setApproved(false);
@@ -366,8 +385,8 @@ export function TradeTerminal() {
               <span className={styles.live}>PAPER MODE</span>
             </h1>
             <p>
-              Live prediction markets. Three research perspectives. Every order
-              stays simulated.
+              Choose a market. Get a clear research summary. Practice with paper
+              funds.
             </p>
           </div>
           <div className={styles.controls}>
@@ -404,22 +423,28 @@ export function TradeTerminal() {
               aria-label="Search markets"
               placeholder="Search prediction markets…"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setVisibleCount(50);
+              }}
             />
           </label>
           <div className={styles.filters}>
-            {["All", "Crypto", "Macro", "Tech"].map((c) => (
+            {["All", "Crypto", "Macro", "Tech", "Sports", "Other"].map((c) => (
               <button
                 key={c}
                 aria-pressed={category === c}
-                onClick={() => setCategory(c)}
+                onClick={() => {
+                  setCategory(c);
+                  setVisibleCount(50);
+                }}
               >
                 {c}
               </button>
             ))}
           </div>
           <span className={styles.refresh}>
-            30s refresh · {markets.length} contracts
+            Live providers · 30s refresh · {markets.length} contracts
           </span>
         </div>
         {(feedError || warnings.length > 0) && (
@@ -451,10 +476,18 @@ export function TradeTerminal() {
             </button>
           </div>
         )}
+        <details className={styles.disclosure}>
+          <summary>New here? Quick walkthrough</summary>
+          <GuidedStudy
+            market={selected}
+            positions={account?.positions.length ?? 0}
+            results={account?.journal.length ?? 0}
+          />
+        </details>
         <div className={styles.grid}>
           <section className={styles.feed} aria-label="Live market feed">
             <div className={styles.panelTitle}>
-              <h2>Market feed</h2>
+              <h2>1. Choose a market</h2>
               <span>01 / DISCOVER</span>
             </div>
             {loading ? (
@@ -466,7 +499,7 @@ export function TradeTerminal() {
                   : "No live contracts available from these feeds. We’ll retry on the next refresh."}
               </p>
             ) : (
-              shown.map((m) => (
+              shown.slice(0, visibleCount).map((m) => (
                 <article
                   key={m.id}
                   className={`${styles.card} ${selected?.id === m.id ? styles.selected : ""}`}
@@ -512,17 +545,17 @@ export function TradeTerminal() {
                       </span>
                     </div>
                   </button>
-                  <button
-                    className={styles.researchButton}
-                    disabled={Boolean(researching) || m.yesPrice === null}
-                    onClick={() => void runResearch(m)}
-                  >
-                    {researching === m.id
-                      ? "Researching bull / bear / synthesis…"
-                      : "Run AI Research ↗"}
-                  </button>
                 </article>
               ))
+            )}
+            {shown.length > visibleCount && (
+              <button
+                className={styles.researchButton}
+                onClick={() => setVisibleCount((count) => count + 50)}
+              >
+                Load 50 more markets ({Math.min(visibleCount, shown.length)} of{" "}
+                {shown.length} shown)
+              </button>
             )}
           </section>
           <section
@@ -530,7 +563,7 @@ export function TradeTerminal() {
             aria-label="Intelligence and paper execution"
           >
             <div className={styles.panelTitle}>
-              <h2>Intelligence & execution</h2>
+              <h2>2. Review & practice</h2>
               <span>02 / RESEARCH → 03 / PRACTICE</span>
             </div>
             {!selected ? (
@@ -541,37 +574,47 @@ export function TradeTerminal() {
               <>
                 <div className={styles.summary}>
                   <span className={styles.eyebrow}>
-                    {selected.source.toUpperCase()} · LIVE SNAPSHOT
+                    {selected.source.toUpperCase()} ·{" "}
+                    {selected.dataProvider.toUpperCase()}
                   </span>
                   <h2>{selected.question}</h2>
-                  <dl>
-                    <div>
-                      <dt>Resolution</dt>
-                      <dd>{date(selected.resolutionDate)}</dd>
-                    </div>
-                    <div>
-                      <dt>Resolution source</dt>
-                      <dd>{selected.oracleSource}</dd>
-                    </div>
-                  </dl>
-                  <details>
-                    <summary>Read resolution rules</summary>
-                    <p>
-                      {selected.rules ||
-                        "No rules supplied. Review the source before trading."}
-                    </p>
+                  <details className={styles.disclosure}>
+                    <summary>Market details & resolution</summary>
+                    <dl>
+                      <div>
+                        <dt>Provider snapshot</dt>
+                        <dd>
+                          {date(new Date(selected.capturedAt).toISOString())}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Resolution</dt>
+                        <dd>{date(selected.resolutionDate)}</dd>
+                      </div>
+                      <div>
+                        <dt>Resolution source</dt>
+                        <dd>{selected.oracleSource}</dd>
+                      </div>
+                    </dl>
+                    <details>
+                      <summary>Read resolution rules</summary>
+                      <p>
+                        {selected.rules ||
+                          "No rules supplied. Review the source before trading."}
+                      </p>
+                    </details>
+                    <a
+                      href={selected.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open original market / rules ↗
+                    </a>
                   </details>
-                  <a
-                    href={selected.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open original market / rules ↗
-                  </a>
                 </div>
                 <div className={styles.researchPanel}>
                   <div className={styles.sectionHeading}>
-                    <h3>Bayesian research</h3>
+                    <h3>AI research &amp; analysis</h3>
                     <button
                       disabled={
                         Boolean(researching) || selected.yesPrice === null
@@ -596,133 +639,210 @@ export function TradeTerminal() {
                       synthesis. Research estimates are hypotheses—not verified
                       probabilities.
                     </p>
+                  ) : report.mode === "heuristic" ? (
+                    <p className={styles.warning} role="status">
+                      AI research unavailable. No independent evidence was
+                      collected, so no probability estimate or trade proposal is
+                      shown. {report.notice}
+                    </p>
                   ) : (
                     <>
                       <p className={styles.researchMode}>
-                        {report.mode === "gemini"
-                          ? "GEMINI 3.8 FLASH · THREE AGENTS"
-                          : "MARKET-PRIOR BASELINE · NO AI EVIDENCE"}
+                        {report.mode === "deepseek"
+                          ? report.citations.length
+                            ? "DEEPSEEK / PRIMARY-SOURCE CONTEXT"
+                            : "DEEPSEEK / MARKET RULES ANALYSIS"
+                          : "GROUNDED AGENT RESEARCH"}
                       </p>
-                      <div className={styles.probabilities}>
-                        <div>
-                          <small>FAIR PROBABILITY</small>
-                          <strong>{percent(report.fairProbability)}</strong>
-                        </div>
-                        <div>
-                          <small>MARKET PRICE</small>
-                          <strong>{percent(report.marketProbability)}</strong>
-                        </div>
-                        <div>
-                          <small>ESTIMATED EDGE</small>
-                          <strong
-                            className={report.edge > 0 ? styles.positive : ""}
-                          >
-                            {report.edge >= 0 ? "+" : ""}
-                            {(report.edge * 100).toFixed(1)} pp
-                          </strong>
-                        </div>
-                      </div>
-                      <div className={styles.agentStrip}>
-                        {report.agents.map((a) => (
-                          <span key={a.role}>
-                            {a.role} <b>{percent(a.probability)}</b>
+                      {decision && (
+                        <section
+                          className={styles.takeaway}
+                          aria-label="Trading takeaway"
+                        >
+                          <span className={styles.eyebrow}>
+                            TRADER TAKEAWAY
                           </span>
-                        ))}
-                        <span>
-                          Confidence <b>{percent(report.confidence)}</b>
-                        </span>
-                      </div>
-                      <p className={styles.notice}>
-                        Edge excludes trading costs. {report.notice}
-                      </p>
-                      <div className={styles.theses}>
-                        <div>
-                          <h4>Bull case / YES</h4>
-                          <ul>
-                            {report.bullThesis.map((t, i) => (
-                              <li key={i}>{t}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h4>Bear case / NO</h4>
-                          <ul>
-                            {report.bearThesis.map((t, i) => (
-                              <li key={i}>{t}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                      <h4 className={styles.evidenceTitle}>Evidence trail</h4>
-                      {report.citations.length ? (
-                        <div className={styles.tableWrap}>
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>Source & evidence</th>
-                                <th>Reliability*</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {report.citations.map((c) => (
-                                <tr key={c.url}>
-                                  <td>
-                                    <a
-                                      href={c.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      {c.title} ↗
-                                    </a>
-                                    <small>{c.source}</small>
-                                    <p>{c.summary}</p>
-                                  </td>
-                                  <td>{percent(c.reliability)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          <p className={styles.notice}>
-                            *Model assessment, not an independent verification
-                            score.
+                          <h4>{decision.title}</h4>
+                          <p>{decision.reason}</p>
+                          <p>
+                            <strong>Next check:</strong>{" "}
+                            {report.nextCheck ||
+                              "Review the cited primary evidence and compare it with the current price."}
                           </p>
-                        </div>
-                      ) : (
-                        <p className={styles.notice}>
-                          No independent citations collected. Baseline research
-                          proposes PASS.
-                        </p>
+                          {decision.action !== "WAIT" && (
+                            <button
+                              onClick={() => {
+                                setSide(
+                                  decision.action === "YES" ? "YES" : "NO",
+                                );
+                                setLimit("");
+                                setApproved(false);
+                                document
+                                  .getElementById("paper-order")
+                                  ?.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                  });
+                              }}
+                            >
+                              Review paper {decision.action} order
+                            </button>
+                          )}
+                        </section>
                       )}
-                      {report.searchSuggestions.map((html, i) => (
-                        <iframe
-                          key={i}
-                          title={`Google Search suggestions ${i + 1}`}
-                          sandbox="allow-popups allow-popups-to-escape-sandbox"
-                          srcDoc={html}
-                          className={styles.suggestions}
-                          referrerPolicy="no-referrer"
-                        />
-                      ))}
+                      <details className={styles.disclosure}>
+                        <summary>
+                          Evidence & analysis details ({report.citations.length}{" "}
+                          sources)
+                        </summary>
+                        {report.mode !== "deepseek" && (
+                          <>
+                            <div className={styles.probabilities}>
+                              <div>
+                                <small>FAIR PROBABILITY</small>
+                                <strong>
+                                  {percent(report.fairProbability)}
+                                </strong>
+                              </div>
+                              <div>
+                                <small>MARKET PRICE</small>
+                                <strong>
+                                  {percent(report.marketProbability)}
+                                </strong>
+                              </div>
+                              <div>
+                                <small>ESTIMATED EDGE</small>
+                                <strong
+                                  className={
+                                    report.edge > 0 ? styles.positive : ""
+                                  }
+                                >
+                                  {report.edge >= 0 ? "+" : ""}
+                                  {(report.edge * 100).toFixed(1)} pp
+                                </strong>
+                              </div>
+                            </div>
+                            <div className={styles.agentStrip}>
+                              {report.agents.map((a) => (
+                                <span key={a.role}>
+                                  {a.role} <b>{percent(a.probability)}</b>
+                                </span>
+                              ))}
+                              <span>
+                                Confidence <b>{percent(report.confidence)}</b>
+                              </span>
+                            </div>
+                          </>
+                        )}
+                        <p className={styles.notice}>
+                          {report.mode === "deepseek"
+                            ? report.notice
+                            : report.notice}
+                        </p>
+                        <p className={styles.notice}>
+                          Research snapshot:{" "}
+                          {date(new Date(report.capturedAt).toISOString())}.
+                        </p>
+                        {reportIsStale && (
+                          <p className={styles.warning} role="status">
+                            This report no longer matches the current price or
+                            is over two minutes old. Refresh research before
+                            using its proposal.
+                          </p>
+                        )}
+                        <div className={styles.theses}>
+                          <div>
+                            <h4>Bull case / YES</h4>
+                            <ul>
+                              {report.bullThesis.slice(0, 1).map((t, i) => (
+                                <li key={i}>{t}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h4>Bear case / NO</h4>
+                            <ul>
+                              {report.bearThesis.slice(0, 1).map((t, i) => (
+                                <li key={i}>{t}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <h4 className={styles.evidenceTitle}>Evidence trail</h4>
+                        {report.citations.length ? (
+                          <div className={styles.tableWrap}>
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th>Source & evidence</th>
+                                  <th>Source check</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {report.citations.map((c) => (
+                                  <tr key={c.url}>
+                                    <td>
+                                      <a
+                                        href={c.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {c.title} ↗
+                                      </a>
+                                      <small>{c.source}</small>
+                                      <p>{c.summary}</p>
+                                    </td>
+                                    <td>
+                                      {c.capturedAt ? (
+                                        <>
+                                          Retrieved{" "}
+                                          {date(
+                                            new Date(
+                                              c.capturedAt,
+                                            ).toISOString(),
+                                          )}
+                                        </>
+                                      ) : (
+                                        percent(c.reliability)
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            <p className={styles.notice}>
+                              Retrieved sources are timestamped context, not
+                              verified forecasts. Other reliability scores are
+                              model assessments.
+                            </p>
+                          </div>
+                        ) : (
+                          <p className={styles.notice}>
+                            No independent citations collected. A trade proposal
+                            is withheld.
+                          </p>
+                        )}
+                        {report.searchSuggestions.map((html, i) => (
+                          <iframe
+                            key={i}
+                            title={`Google Search suggestions ${i + 1}`}
+                            sandbox="allow-popups allow-popups-to-escape-sandbox"
+                            srcDoc={html}
+                            className={styles.suggestions}
+                            referrerPolicy="no-referrer"
+                          />
+                        ))}
+                      </details>
                       <div className={styles.falsification}>
-                        <h4>Why this could be wrong</h4>
+                        <h4>Key risk</h4>
                         <p>{report.whyThisCouldBeWrong}</p>
-                      </div>
-                      <div className={styles.proposal}>
-                        <span>Research proposal</span>
-                        <strong>
-                          {report.proposedTrade.action.replaceAll("_", " ")}
-                        </strong>
-                        <span>
-                          {dollars(report.proposedTrade.kellyExposureUSD)}{" "}
-                          capped quarter-Kelly exposure
-                        </span>
                       </div>
                     </>
                   )}
                 </div>
-                <div className={styles.execution}>
+                <div className={styles.execution} id="paper-order">
                   <div className={styles.sectionHeading}>
-                    <h3>Paper execution</h3>
+                    <h3>3. Practice a trade</h3>
                     <span className={styles.live}>SIMULATED ONLY</span>
                   </div>
                   <div className={styles.sides}>
@@ -771,25 +891,62 @@ export function TradeTerminal() {
                       />
                     </label>
                   </div>
-                  <dl className={styles.orderStats}>
-                    <div>
-                      <dt>Estimated paper cost</dt>
-                      <dd>{quote.value ? money(quote.value.cost) : "—"}</dd>
+                  {quote.value && (
+                    <div className={styles.orderSummary}>
+                      <span>
+                        Paper cost <strong>{money(quote.value.cost)}</strong>
+                      </span>
+                      <span>
+                        Payout if correct{" "}
+                        <strong>{money(quote.value.payout)}</strong>
+                      </span>
                     </div>
-                    <div>
-                      <dt>Simulated slippage</dt>
-                      <dd>0.05%</dd>
-                    </div>
-                    <div>
-                      <dt>Payout if this outcome wins</dt>
-                      <dd>{quote.value ? money(quote.value.payout) : "—"}</dd>
-                    </div>
-                  </dl>
-                  <p className={styles.notice}>
-                    Snapshot fill assumption, not an executable quote. Fees
-                    excluded. $200 per market · $2,000 total exposure. Losing
-                    outcomes pay $0.
-                  </p>
+                  )}
+                  <details className={styles.disclosure}>
+                    <summary>Risk & exit checks</summary>
+                    <PreTradeCheck
+                      key={JSON.stringify([
+                        selected.id,
+                        side,
+                        quote.value?.shares ?? shares,
+                      ])}
+                      market={selected}
+                      side={side}
+                      quote={quote.value}
+                      decision={decision}
+                      now={clock || selected.capturedAt}
+                    />
+                  </details>
+                  <details className={styles.disclosure}>
+                    <summary>Paper trade settings</summary>
+                    <label className={styles.approval}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(account?.feeBps)}
+                        disabled={!ready || !account || busy}
+                        onChange={(e) => {
+                          const feeBps = e.target.checked ? 100 : 0;
+                          void mutateAccount((a) => ({
+                            ...a,
+                            feeBps,
+                            revision: a.revision + 1,
+                          })).catch(() =>
+                            setMessage(
+                              "Could not save the paper fee assumption.",
+                            ),
+                          );
+                          setApproved(false);
+                        }}
+                      />
+                      Model a 1% fee on entry and exit. Actual venue fees remain
+                      unknown.
+                    </label>
+                    <p className={styles.notice}>
+                      Paper fills assume the snapshot price plus 0.05% slippage,
+                      not an executable quote. $200 per market · $2,000 total
+                      exposure. Losing outcomes pay $0.
+                    </p>
+                  </details>
                   {quote.error && (
                     <p className={styles.notice}>{quote.error}</p>
                   )}
@@ -862,7 +1019,9 @@ export function TradeTerminal() {
                   {account.positions.map((p) => {
                     const m = markets.find((m) => m.id === p.marketId),
                       mark =
-                        m && clock - m.capturedAt <= 60000
+                        m &&
+                        clock - m.capturedAt <= 60000 &&
+                        Date.parse(m.resolutionDate) > clock
                           ? p.side === "YES"
                             ? m.yesPrice
                             : m.noPrice
@@ -923,6 +1082,31 @@ export function TradeTerminal() {
             </div>
           )}
         </section>
+        <details className={styles.disclosure}>
+          <summary>
+            Paper journal & backups ? {account?.journal.length ?? 0} recorded
+            actions
+          </summary>
+          <div id="paper-journal">
+            {ready && account && (
+              <PaperJournal
+                key={account.revision}
+                account={account}
+                mutate={mutateAccount}
+                now={clock}
+              />
+            )}
+          </div>
+        </details>
+        <details className={styles.disclosure}>
+          <summary>Watchlist & alerts</summary>
+          <Watchlist
+            markets={markets}
+            selected={selected}
+            side={side}
+            quantity={quote.value?.shares ?? null}
+          />
+        </details>
         <footer className={styles.footer}>
           ExitCheck Agentic Trade & Prediction Terminal · Paper practice is not
           evidence of achievable live returns.

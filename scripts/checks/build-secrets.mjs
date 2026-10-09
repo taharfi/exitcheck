@@ -5,7 +5,9 @@ import { join } from "node:path";
 const markers = [
   `exitcheck_build_key_${randomBytes(24).toString("hex")}`,
   `https://exitcheck-build-rpc-${randomBytes(12).toString("hex")}.invalid`,
+  `exitcheck_build_gemini_${randomBytes(24).toString("hex")}`,
 ];
+markers.push(`exitcheck_build_deepseek_${randomBytes(24).toString("hex")}`);
 const child = spawn(
   process.execPath,
   ["node_modules/next/dist/bin/next", "build"],
@@ -15,6 +17,11 @@ const child = spawn(
       ...process.env,
       JUPITER_API_KEY: markers[0],
       SOLANA_RPC_URL: markers[1],
+      DEEPSEEK_API_KEY: markers[3],
+      GEMINI_API_KEY: markers[2],
+      GEMINI_API_KEY_1: markers[2] + "_one",
+      GEMINI_API_KEY_2: markers[2] + "_two",
+      GEMINI_API_KEY_3: markers[2] + "_three",
     },
   },
 );

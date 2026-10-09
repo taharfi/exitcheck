@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ExitCheck — Clarity before you act",
   description:
-    "Understand your Solana prediction positions. Check exit sizes, available liquidity and estimated proceeds with ExitCheck.",
+    "Explore live prediction markets, analyze rules with AI, compare private paper experiments and check Solana prediction exit liquidity. Live execution is disabled.",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
