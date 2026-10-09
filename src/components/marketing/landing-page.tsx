@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PoweredBy } from "@/components/powered-by";
 import { BrandMark } from "@/components/brand";
 import { LiveMarketPreview } from "./live-market-preview";
 import styles from "./landing.module.css";
@@ -14,7 +15,7 @@ const questions = [
   ],
   [
     "Are the markets and balances real?",
-    "Market quotes come from live Polymarket and Jupiter feeds. Missing data stays unavailable. The $10,000 paper balance and practice orders are simulated; they are not wallet funds. Position lookup covers supported Jupiter Prediction positions on Solana.",
+    "Market quotes come from live Polymarket and Jupiter feeds, with Panta on Solana when connected. Missing data stays unavailable. The $10,000 paper balance and practice orders are simulated; they are not wallet funds. Position lookup covers supported Jupiter Prediction positions on Solana.",
   ],
   [
     "What does the AI research verify?",
@@ -313,6 +314,7 @@ export function LandingPage() {
           <a href="#questions">FAQ</a>
         </div>
         <small>Beta · Estimates can change. Live execution is disabled.</small>
+        <PoweredBy />
       </footer>
     </div>
   );

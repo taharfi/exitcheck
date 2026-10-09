@@ -191,6 +191,7 @@
 }
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   margin-bottom: 20px;
@@ -216,6 +217,27 @@
   width: 100%;
   outline: none;
   font-size: 12px;
+}
+.providerFilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #66745e;
+}
+.marketAddress {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+.providerFilter select {
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd4bd;
+  border-radius: 6px;
+  background: #fffef8;
+  color: #263b2b;
+  font: inherit;
 }
 .filters {
   display: flex;

@@ -47,7 +47,7 @@ export function PreTradeCheck({
     now - preview.estimate.capturedAt <= 20000;
   const quoteFresh =
     market.tradable &&
-    Date.parse(market.resolutionDate) > now &&
+    Date.parse(market.tradingClosesAt ?? market.resolutionDate) > now &&
     market.capturedAt <= now + 1000 &&
     now - market.capturedAt <= 60000;
 

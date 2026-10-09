@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { pantaCatalog } from "./panta";
 import { JupiterProvider } from "@/lib/provider/jupiter";
 import { AppError } from "@/lib/errors";
 import { readLimitedText } from "@/lib/read-limited-text";
@@ -345,7 +346,11 @@ export async function marketFeed(): Promise<MarketFeed> {
   if (cached && Date.now() - cached.capturedAt < 30000) return cached;
   if (pending) return pending;
   pending = (async () => {
-    const results = await Promise.allSettled([gammaCatalog(), solanaMarkets()]);
+    const results = await Promise.allSettled([
+      gammaCatalog(),
+      solanaMarkets(),
+      pantaCatalog(),
+    ]);
     const warnings: string[] = [],
       markets: MarketItem[] = [];
     const gamma = results[0],
@@ -387,6 +392,14 @@ export async function marketFeed(): Promise<MarketFeed> {
       warnings.push(
         "Solana feed unavailable. Check Jupiter access or retry shortly.",
       );
+    const panta = results[2];
+    if (panta.status === "fulfilled") {
+      markets.push(...panta.value.markets);
+      warnings.push(...panta.value.warnings);
+    } else
+      warnings.push(
+        "Panta feed unavailable. Other market feeds remain available.",
+      );
     if (!markets.some((m) => m.source === "polymarket")) {
       try {
         const backup = await jupiterPolymarket();
@@ -402,7 +415,7 @@ export async function marketFeed(): Promise<MarketFeed> {
     cached = {
       markets: [...new Map(markets.map((m) => [m.id, m])).values()].slice(
         0,
-        1100,
+        1120,
       ),
       warnings,
       capturedAt: Date.now(),
@@ -417,7 +430,7 @@ export async function marketFeed(): Promise<MarketFeed> {
 }
 export async function knownMarket(id: string) {
   const m = (await marketFeed()).markets.find((m) => m.id === id);
-  if (!m || Date.parse(m.resolutionDate) <= Date.now())
+  if (!m || Date.parse(m.tradingClosesAt ?? m.resolutionDate) <= Date.now())
     throw new AppError(
       "MARKET_UNAVAILABLE",
       "This market is no longer in the live feed. Refresh markets.",

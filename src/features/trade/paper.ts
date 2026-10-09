@@ -112,7 +112,7 @@ export function paperQuote(
   if (!market.tradable || price === null || price <= 0 || price >= 1)
     throw Error("This outcome has no available live price.");
   if (
-    Date.parse(market.resolutionDate) <= now ||
+    Date.parse(market.tradingClosesAt ?? market.resolutionDate) <= now ||
     now - market.capturedAt > 60000 ||
     market.capturedAt > now + 1000
   )

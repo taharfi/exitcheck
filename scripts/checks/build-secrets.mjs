@@ -8,6 +8,7 @@ const markers = [
   `exitcheck_build_gemini_${randomBytes(24).toString("hex")}`,
 ];
 markers.push(`exitcheck_build_deepseek_${randomBytes(24).toString("hex")}`);
+markers.push(`exitcheck_build_panta_${randomBytes(24).toString("hex")}`);
 const child = spawn(
   process.execPath,
   ["node_modules/next/dist/bin/next", "build"],
@@ -16,6 +17,7 @@ const child = spawn(
     env: {
       ...process.env,
       JUPITER_API_KEY: markers[0],
+      PANTA_API_KEY: markers[4],
       SOLANA_RPC_URL: markers[1],
       DEEPSEEK_API_KEY: markers[3],
       GEMINI_API_KEY: markers[2],

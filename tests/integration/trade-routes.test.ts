@@ -19,6 +19,23 @@ vi.mock("../../src/lib/provider/jupiter", () => ({
 import { POST as research } from "../../src/app/api/trade/research/route";
 import { POST as depth } from "../../src/app/api/trade/depth/route";
 const origin = "https://exitcheck.test";
+it("does not treat Panta spot prices as an exit order book", async () => {
+  mocks.market.mockResolvedValue({
+    id: "panta:test",
+    source: "solana",
+    dataProvider: "panta",
+  });
+  const response = await depth(
+    request("/api/trade/depth", {
+      marketId: "panta:test",
+      side: "YES",
+      quantity: "1000000",
+    }),
+  );
+  expect(response.status).toBe(422);
+  expect((await response.json()).error.message).toMatch(/not exit bid depth/);
+  expect(mocks.depth).not.toHaveBeenCalled();
+});
 const request = (path: string, body: unknown, from = origin) =>
   new Request(origin + path, {
     method: "POST",

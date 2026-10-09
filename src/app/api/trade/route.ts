@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   return endpoint(request, async () => {
     const raw = new URL(request.url).searchParams.get("limit");
     const limit =
-      raw === null ? 1100 : z.coerce.number().int().min(1).max(1100).parse(raw);
+      raw === null ? 1120 : z.coerce.number().int().min(1).max(1120).parse(raw);
     const feed = await marketFeed();
     return { ...feed, markets: feed.markets.slice(0, limit) };
   });

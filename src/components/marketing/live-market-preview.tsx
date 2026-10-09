@@ -61,8 +61,12 @@ export function LiveMarketPreview() {
           {feed.markets.slice(0, 3).map((m) => (
             <Link key={m.id} href="/trade" className={styles.previewMarket}>
               <small>
-                {m.source === "solana" ? "SOLANA" : "POLYMARKET"} /{" "}
-                {m.dataProvider.toUpperCase()}
+                {m.dataProvider === "panta"
+                  ? "PANTA / SOLANA"
+                  : m.source === "solana"
+                    ? "SOLANA"
+                    : "POLYMARKET"}{" "}
+                / {m.dataProvider.toUpperCase()}
               </small>
               <h3>{m.question}</h3>
               <div>
@@ -93,6 +97,15 @@ export function LiveMarketPreview() {
               .slice(0, 19)}{" "}
             UTC
           </small>
+          {feed.markets.some((market) => market.dataProvider === "panta") && (
+            <a
+              href="https://panta.market"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Powered by Panta
+            </a>
+          )}
         </>
       )}
       {feed?.warnings.map((w) => (

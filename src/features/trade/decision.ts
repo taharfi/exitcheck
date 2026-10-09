@@ -17,7 +17,7 @@ export function tradeDecision(
   if (
     report.marketId !== market.id ||
     !market.tradable ||
-    Date.parse(market.resolutionDate) <= now ||
+    Date.parse(market.tradingClosesAt ?? market.resolutionDate) <= now ||
     now - market.capturedAt > 60000
   )
     return wait("The market or quote is unavailable. Refresh before deciding.");

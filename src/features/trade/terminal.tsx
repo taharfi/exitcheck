@@ -12,6 +12,7 @@ import { PaperJournal } from "./paper-journal";
 import { Watchlist } from "./watchlist";
 import { GuidedStudy } from "./guided-study";
 import { AppHeader } from "@/components/app-header";
+import { PoweredBy } from "@/components/powered-by";
 import { decimal, money } from "@/lib/amounts";
 import {
   marketFeedSchema,
@@ -141,6 +142,7 @@ export function TradeTerminal() {
     [query, setQuery] = useState(""),
     [category, setCategory] = useState("All");
   const [visibleCount, setVisibleCount] = useState(50);
+  const [provider, setProvider] = useState("All");
   const [reports, setReports] = useState<Record<string, ResearchResult>>({}),
     [researching, setResearching] = useState(""),
     [researchError, setResearchError] = useState("");
@@ -210,6 +212,7 @@ export function TradeTerminal() {
   const shown = markets.filter(
     (m) =>
       (category === "All" || m.category === category) &&
+      (provider === "All" || m.dataProvider === provider) &&
       m.question.toLowerCase().includes(query.toLowerCase()),
   );
   function choose(m: MarketItem) {
@@ -443,6 +446,25 @@ export function TradeTerminal() {
               </button>
             ))}
           </div>
+          <label className={styles.providerFilter}>
+            Market feed
+            <select
+              aria-label="Market feed"
+              value={provider}
+              onChange={(event) => {
+                setProvider(event.target.value);
+                setVisibleCount(50);
+              }}
+            >
+              <option value="All">All providers</option>
+              <option value="gamma">Polymarket</option>
+              <option value="jupiter">Jupiter / Solana</option>
+              <option value="panta">
+                Panta / Solana (
+                {markets.filter((m) => m.dataProvider === "panta").length})
+              </option>
+            </select>
+          </label>
           <span className={styles.refresh}>
             Live providers · 30s refresh · {markets.length} contracts
           </span>
@@ -511,11 +533,13 @@ export function TradeTerminal() {
                   >
                     <div className={styles.cardMeta}>
                       <span>
-                        {m.source === "solana"
-                          ? "SOLANA / FORECAST"
-                          : m.dataProvider === "jupiter"
-                            ? "POLYMARKET / VIA SOLANA"
-                            : "POLYMARKET / POLYGON"}
+                        {m.dataProvider === "panta"
+                          ? "PANTA / SOLANA"
+                          : m.source === "solana"
+                            ? "SOLANA / FORECAST"
+                            : m.dataProvider === "jupiter"
+                              ? "POLYMARKET / VIA SOLANA"
+                              : "POLYMARKET / POLYGON"}
                       </span>
                       <span>{m.category}</span>
                     </div>
@@ -591,6 +615,26 @@ export function TradeTerminal() {
                         <dt>Resolution</dt>
                         <dd>{date(selected.resolutionDate)}</dd>
                       </div>
+                      {selected.tradingClosesAt && (
+                        <div>
+                          <dt>Trading closes</dt>
+                          <dd>{date(selected.tradingClosesAt)}</dd>
+                        </div>
+                      )}
+                      {selected.marketStartsAt && (
+                        <div>
+                          <dt>Scheduled start</dt>
+                          <dd>{date(selected.marketStartsAt)}</dd>
+                        </div>
+                      )}
+                      {selected.dataProvider === "panta" && (
+                        <div>
+                          <dt>Market address</dt>
+                          <dd className={styles.marketAddress}>
+                            {selected.providerId}
+                          </dd>
+                        </div>
+                      )}
                       <div>
                         <dt>Resolution source</dt>
                         <dd>{selected.oracleSource}</dd>
@@ -608,7 +652,9 @@ export function TradeTerminal() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Open original market / rules ↗
+                      {selected.dataProvider === "panta"
+                        ? "Open Panta · verify market rules ↗"
+                        : "Open original market / rules ↗"}
                     </a>
                   </details>
                 </div>
@@ -861,12 +907,38 @@ export function TradeTerminal() {
                       </button>
                     ))}
                   </div>
-                  {selected.source === "solana" && (
+                  {selected.source === "solana" &&
+                    selected.dataProvider === "jupiter" && (
+                      <p className={styles.notice}>
+                        Forecast’s market ID selects UP or DOWN. NO is
+                        unavailable for this outcome token.
+                      </p>
+                    )}
+                  {selected.dataProvider === "panta" && (
                     <p className={styles.notice}>
-                      Forecast’s market ID selects UP or DOWN. NO is unavailable
-                      for this outcome token.
+                      <a
+                        href="https://panta.market"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Powered by Panta
+                      </a>
+                      {" · "}Paper fills use the reported spot price. Real
+                      bonding-curve fills, fees and exit liquidity are not
+                      simulated. No verified Panta settlement adapter is
+                      available yet.
                     </p>
                   )}
+                  {selected.dataProvider === "panta" &&
+                    selected.marketStartsAt &&
+                    Date.parse(selected.marketStartsAt) > clock && (
+                      <p className={styles.notice}>
+                        Scheduled start: {date(selected.marketStartsAt)}.
+                        Research is available; paper orders remain blocked
+                        before this time. This is not a verified live buy
+                        window.
+                      </p>
+                    )}
                   <div className={styles.inputs}>
                     <label>
                       Limit price ($)
@@ -1021,7 +1093,8 @@ export function TradeTerminal() {
                       mark =
                         m &&
                         clock - m.capturedAt <= 60000 &&
-                        Date.parse(m.resolutionDate) > clock
+                        Date.parse(m.tradingClosesAt ?? m.resolutionDate) >
+                          clock
                           ? p.side === "YES"
                             ? m.yesPrice
                             : m.noPrice
@@ -1110,6 +1183,9 @@ export function TradeTerminal() {
         <footer className={styles.footer}>
           ExitCheck Agentic Trade & Prediction Terminal · Paper practice is not
           evidence of achievable live returns.
+          <PoweredBy
+            panta={markets.some((market) => market.dataProvider === "panta")}
+          />
         </footer>
       </main>
     </div>

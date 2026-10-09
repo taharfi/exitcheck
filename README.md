@@ -7,6 +7,7 @@ Live product: [exitcheck.xyz](https://exitcheck.xyz) · [Research and paper term
 ## Current product
 
 - Live prediction-market feeds from Polymarket Gamma/CLOB and Jupiter, with provider labels and quote timestamps.
+- Panta production-market discovery and detail prices, with provider filtering, resolution context and attribution. Explicit sandbox/test contracts are excluded. Discovery is bounded to 200 catalog rows and 20 details; Panta exit depth and funded execution remain unsupported.
 - A simplified **Choose → Research → Practice** terminal. Evidence, risk checks, fee settings, journal and alerts expand when needed.
 - DeepSeek research with bounded primary-source context. Unsupported evidence stays unknown; uncalibrated analysis does not justify a directional recommendation.
 - Size-aware exit previews against current bids. Quotes and depth expire; missing liquidity is never fabricated.
@@ -53,6 +54,8 @@ npm run verify:secrets
 Optional browser checks require Chromium: `npx playwright install chromium`, then `npm run test:e2e`. Browser tests use controlled providers to check UI behaviour; they do not prove provider uptime, profitability or funded execution. Live probes are opt-in. Tests use isolated stores.
 
 ## Hosting and data
+
+Panta reads require the server-only `PANTA_API_KEY`. Use a production key for production markets; the test key used during verification exposed a sandbox catalog. See [Panta configuration and limits](docs/operations/panta-integration.md). Technology credits identify data, research, wallet and infrastructure integrations.
 
 The live app is hosted on Vercel. Hosted persistence requires your own Turso configuration, app origin, provider credentials and monitoring configuration. Local SQLite is not persistent storage on Vercel. Copy-agent monitoring and terminal watch alerts have different lifecycles: monitoring uses configured hosted workflows; terminal alerts require an open page. Check provider and hosting quotas before enabling collectors.
 

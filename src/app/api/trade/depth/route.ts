@@ -20,6 +20,12 @@ export async function POST(request: Request) {
     const m = await knownMarket(input.marketId),
       isYes = input.side === "YES";
     let depth: Depth;
+    if (m.dataProvider === "panta")
+      throw new AppError(
+        "NO_DEPTH",
+        "Panta spot prices are not exit bid depth. A verified Panta sell-liquidity adapter is not available.",
+        422,
+      );
     if (m.source === "polymarket" && m.dataProvider === "jupiter") {
       depth = await new JupiterProvider().depth(m.providerId);
     } else if (m.source === "polymarket") {

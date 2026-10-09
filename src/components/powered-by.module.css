@@ -1,0 +1,43 @@
+.credits {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  padding: 18px 0 8px;
+  text-align: left;
+  color: #66745e;
+}
+.label {
+  font-size: 11px;
+  font-weight: 700;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+.links a {
+  color: #38512f;
+  font-size: 12px;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.links a:hover {
+  text-decoration: underline;
+}
+.links a:focus-visible {
+  outline: 2px solid #496333;
+  outline-offset: 4px;
+}
+.links .panta {
+  padding: 4px 9px;
+  border: 1px solid #b6c39c;
+  border-radius: 6px;
+  font-weight: 700;
+  background: #f1f5e6;
+}
+.credits small {
+  font-size: 10px;
+  line-height: 1.6;
+}

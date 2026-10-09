@@ -17,6 +17,7 @@ const child = spawn(
       EXITCHECK_DATABASE: "sqlite",
       MONITORING_WORKFLOW_ENABLED: "false",
       JUPITER_API_KEY: "",
+      PANTA_API_KEY: "",
       DEEPSEEK_API_KEY: "",
       RESEARCH_PROVIDER: "gemini",
       GEMINI_API_KEY: "",

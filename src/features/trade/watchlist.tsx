@@ -96,7 +96,7 @@ export function Watchlist({
             if (
               m &&
               m.tradable &&
-              Date.parse(m.resolutionDate) > Date.now() &&
+              Date.parse(m.tradingClosesAt ?? m.resolutionDate) > Date.now() &&
               Date.now() - m.capturedAt <= 60000 &&
               m.capturedAt <= Date.now() + 1000 &&
               price !== null &&

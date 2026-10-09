@@ -4,12 +4,14 @@ export const marketItemSchema = z.object({
   question: z.string().min(1).max(1000),
   category: z.enum(["Crypto", "Macro", "Tech", "Sports", "Other"]),
   source: z.enum(["polymarket", "solana"]),
-  dataProvider: z.enum(["gamma", "jupiter"]),
+  dataProvider: z.enum(["gamma", "jupiter", "panta"]),
   yesPrice: z.number().finite().min(0).max(1).nullable(),
   noPrice: z.number().finite().min(0).max(1).nullable(),
   volume24h: z.number().finite().nonnegative().nullable(),
   liquidity: z.number().finite().nonnegative().nullable(),
   resolutionDate: z.string().datetime(),
+  tradingClosesAt: z.string().datetime().optional(),
+  marketStartsAt: z.string().datetime().optional(),
   rules: z.string().max(15000),
   oracleSource: z.string().max(300),
   url: z
@@ -65,7 +67,7 @@ export const researchSchema = z.object({
 });
 export type ResearchResult = z.infer<typeof researchSchema>;
 export const marketFeedSchema = z.object({
-  markets: z.array(marketItemSchema).max(1100),
+  markets: z.array(marketItemSchema).max(1120),
   warnings: z.array(z.string()),
   capturedAt: z.number(),
 });
