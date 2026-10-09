@@ -314,7 +314,7 @@ export function LandingPage() {
           <a href="#questions">FAQ</a>
         </div>
         <small>Beta · Estimates can change. Live execution is disabled.</small>
-        <PoweredBy />
+        <PoweredBy panta />
       </footer>
     </div>
   );
