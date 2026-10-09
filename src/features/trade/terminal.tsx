@@ -16,6 +16,7 @@ import { PoweredBy } from "@/components/powered-by";
 import { decimal, money } from "@/lib/amounts";
 import {
   marketFeedSchema,
+  marketItemSchema,
   researchSchema,
   type MarketItem,
   type ResearchResult,
@@ -158,6 +159,7 @@ export function TradeTerminal() {
   const researchController = useRef<AbortController | null>(null),
     orderPending = useRef(false),
     mounted = useRef(true);
+  const detailController = useRef<AbortController | null>(null);
   useEffect(() => {
     mounted.current = true;
     const controller = new AbortController();
@@ -193,6 +195,7 @@ export function TradeTerminal() {
       mounted.current = false;
       controller.abort();
       researchController.current?.abort();
+      detailController.current?.abort();
       clearInterval(poll);
       clearInterval(timer);
     };
@@ -216,12 +219,39 @@ export function TradeTerminal() {
       m.question.toLowerCase().includes(query.toLowerCase()),
   );
   function choose(m: MarketItem) {
+    detailController.current?.abort();
     setSelectedId(m.id);
     setSide("YES");
     setLimit("");
     setApproved(false);
     setMessage("");
     setResearchError("");
+    if (m.dataProvider === "panta") {
+      const controller = new AbortController();
+      detailController.current = controller;
+      void api(
+        `/api/trade/market?id=${encodeURIComponent(m.id)}`,
+        undefined,
+        controller.signal,
+      )
+        .then((raw) => {
+          const detail = marketItemSchema.parse(raw);
+          if (detail.id !== m.id)
+            throw Error("Contract details do not match this selection.");
+          if (!controller.signal.aborted) {
+            setMarkets((current) =>
+              current.map((item) => (item.id === m.id ? detail : item)),
+            );
+            setApproved(false);
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted)
+            setMessage(
+              "Additional Panta details are unavailable. Catalog information remains visible.",
+            );
+        });
+    }
   }
   function defaultLimit(m: MarketItem, chosenSide: "YES" | "NO") {
     const price = chosenSide === "YES" ? m.yesPrice : m.noPrice;
@@ -544,6 +574,14 @@ export function TradeTerminal() {
                       <span>{m.category}</span>
                     </div>
                     <h3>{m.question}</h3>
+                    {m.marketStatus && (
+                      <span className={styles.live}>
+                        {m.marketStatus.toUpperCase()}
+                      </span>
+                    )}
+                    {m.isTestContract && (
+                      <span className={styles.live}>TEST CONTRACT</span>
+                    )}
                     <div className={styles.prices}>
                       <div>
                         <span>YES</span>
@@ -602,6 +640,16 @@ export function TradeTerminal() {
                     {selected.dataProvider.toUpperCase()}
                   </span>
                   <h2>{selected.question}</h2>
+                  {selected.marketStatus && (
+                    <p className={styles.notice}>
+                      Contract status: {selected.marketStatus}.
+                    </p>
+                  )}
+                  {selected.isTestContract && (
+                    <p className={styles.notice}>
+                      Test contract · provider sandbox data.
+                    </p>
+                  )}
                   <details className={styles.disclosure}>
                     <summary>Market details & resolution</summary>
                     <dl>
@@ -663,7 +711,12 @@ export function TradeTerminal() {
                     <h3>AI research &amp; analysis</h3>
                     <button
                       disabled={
-                        Boolean(researching) || selected.yesPrice === null
+                        Boolean(researching) ||
+                        selected.yesPrice === null ||
+                        selected.questionAvailable === false ||
+                        ["closed", "resolved", "cancelled"].includes(
+                          selected.marketStatus ?? "",
+                        )
                       }
                       onClick={() => void runResearch(selected)}
                     >

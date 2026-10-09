@@ -7,7 +7,7 @@ Live product: [exitcheck.xyz](https://exitcheck.xyz) · [Research and paper term
 ## Current product
 
 - Live prediction-market feeds from Polymarket Gamma/CLOB and Jupiter, with provider labels and quote timestamps.
-- Panta production-market discovery and detail prices, with provider filtering, resolution context and attribution. Explicit sandbox/test contracts are excluded. Discovery is bounded to 200 catalog rows and 20 details; Panta exit depth and funded execution remain unsupported.
+- Panta production-market discovery and detail prices, with provider filtering, resolution context and attribution. Sandbox/test contracts are included with explicit labels. Current and historical contracts are browsable. Discovery is bounded to 200 catalog rows and 20 initial details, with more details loaded on selection; Panta exit depth and funded execution remain unsupported.
 - A simplified **Choose → Research → Practice** terminal. Evidence, risk checks, fee settings, journal and alerts expand when needed.
 - DeepSeek research with bounded primary-source context. Unsupported evidence stays unknown; uncalibrated analysis does not justify a directional recommendation.
 - Size-aware exit previews against current bids. Quotes and depth expire; missing liquidity is never fabricated.

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pantaCatalog } from "./panta";
+import { pantaCatalog, pantaMarket } from "./panta";
 import { JupiterProvider } from "@/lib/provider/jupiter";
 import { AppError } from "@/lib/errors";
 import { readLimitedText } from "@/lib/read-limited-text";
@@ -415,7 +415,7 @@ export async function marketFeed(): Promise<MarketFeed> {
     cached = {
       markets: [...new Map(markets.map((m) => [m.id, m])).values()].slice(
         0,
-        1120,
+        1300,
       ),
       warnings,
       capturedAt: Date.now(),
@@ -429,8 +429,13 @@ export async function marketFeed(): Promise<MarketFeed> {
   }
 }
 export async function knownMarket(id: string) {
-  const m = (await marketFeed()).markets.find((m) => m.id === id);
-  if (!m || Date.parse(m.tradingClosesAt ?? m.resolutionDate) <= Date.now())
+  let m = (await marketFeed()).markets.find((m) => m.id === id);
+  if (m?.dataProvider === "panta") m = await pantaMarket(m.id);
+  if (
+    !m ||
+    ["closed", "resolved", "cancelled"].includes(m.marketStatus ?? "") ||
+    Date.parse(m.tradingClosesAt ?? m.resolutionDate) <= Date.now()
+  )
     throw new AppError(
       "MARKET_UNAVAILABLE",
       "This market is no longer in the live feed. Refresh markets.",

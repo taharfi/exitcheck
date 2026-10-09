@@ -61,11 +61,13 @@ export function LiveMarketPreview() {
           {feed.markets.slice(0, 3).map((m) => (
             <Link key={m.id} href="/trade" className={styles.previewMarket}>
               <small>
-                {m.dataProvider === "panta"
-                  ? "PANTA / SOLANA"
-                  : m.source === "solana"
-                    ? "SOLANA"
-                    : "POLYMARKET"}{" "}
+                {m.isTestContract
+                  ? "PANTA / TEST"
+                  : m.dataProvider === "panta"
+                    ? "PANTA / SOLANA"
+                    : m.source === "solana"
+                      ? "SOLANA"
+                      : "POLYMARKET"}{" "}
                 / {m.dataProvider.toUpperCase()}
               </small>
               <h3>{m.question}</h3>

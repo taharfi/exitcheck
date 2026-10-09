@@ -20,6 +20,24 @@ const row = {
 };
 afterEach(() => vi.unstubAllEnvs());
 describe("Panta market integration", () => {
+  it("keeps historical contracts visible without enabling paper orders", () => {
+    for (const change of [
+      { resolved: true },
+      { status: "closed" },
+      { phase: "cancelled" },
+    ]) {
+      const market = normalizePanta(
+        { ...row, ...change, yesPrice: "0.5" },
+        now,
+      )!;
+      expect(market).toMatchObject({
+        tradable: false,
+        yesPrice: null,
+        noPrice: null,
+      });
+      expect(() => paperQuote(market, "YES", "10", "0.6", now)).toThrow();
+    }
+  });
   it("discovers active contracts beyond the first catalog page and stops repeated cursors", async () => {
     let pages = 0;
     const transport = vi
@@ -55,7 +73,11 @@ describe("Panta market integration", () => {
         now,
       ),
     ).toMatchObject({ dataProvider: "panta", tradable: false });
-    expect(normalizePanta({ ...row, status: "closed" }, now)).toBeNull();
+    expect(normalizePanta({ ...row, status: "closed" }, now)).toMatchObject({
+      marketStatus: "closed",
+      tradable: false,
+      yesPrice: null,
+    });
   });
   it("does not request the provider or invent markets without a key", async () => {
     vi.stubEnv("PANTA_API_KEY", "");
@@ -110,11 +132,8 @@ describe("Panta market integration", () => {
     );
     expect(feed.warnings.join()).toMatch(/unavailable/);
   });
-  it("rejects closed, future, resolved, malformed and out-of-range rows", () => {
+  it("rejects malformed and out-of-range rows", () => {
     for (const change of [
-      { phase: "resolved" },
-      { resolved: true },
-      { endTime: Math.floor(now / 1000) - 1 },
       { yesPrice: "1.2" },
       { marketId: "../../secrets" },
       { resolutionTime: 1e30 },
@@ -131,13 +150,13 @@ describe("Panta market integration", () => {
       /no available live price/,
     );
   });
-  it("excludes sandbox contracts and retains provider rules and a chain-reported question", () => {
+  it("includes and labels sandbox contracts and retains provider rules and a chain-reported question", () => {
     expect(
       normalizePanta({ ...row, title: "Sandbox test market" }, now),
-    ).toBeNull();
+    ).toMatchObject({ isTestContract: true });
     expect(
       normalizePanta({ ...row, title: "[TEST] BTC >= 1000 USD" }, now),
-    ).toBeNull();
+    ).toMatchObject({ isTestContract: true });
     expect(
       normalizePanta(
         {
@@ -195,7 +214,7 @@ describe("Panta market integration", () => {
         });
       });
     const feed = await pantaCatalog(transport, "test-secret");
-    expect(feed.markets).toHaveLength(20);
+    expect(feed.markets).toHaveLength(25);
     expect(peak).toBeLessThanOrEqual(4);
     expect(transport).toHaveBeenCalledTimes(21);
     const mismatch = vi

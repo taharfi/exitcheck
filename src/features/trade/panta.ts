@@ -82,17 +82,21 @@ export function normalizePanta(
   const result = rowSchema.safeParse(raw);
   if (!result.success) return null;
   const m = result.data;
-  const question = m.title.trim() || m.question?.trim();
-  if (!question || /^(?:\[test\]|sandbox test market\b)/i.test(question))
-    return null;
-  if (
-    m.resolved ||
-    !["primary", "secondary"].includes(m.phase) ||
-    !["open", m.phase].includes(m.status) ||
-    m.endTime * 1000 <= now ||
-    m.resolutionTime < m.endTime
-  )
-    return null;
+  const suppliedQuestion = m.title.trim() || m.question?.trim();
+  const question =
+    suppliedQuestion ||
+    `Panta contract ${m.marketId.slice(0, 6)}…${m.marketId.slice(-4)}`;
+  const marketStatus: MarketItem["marketStatus"] =
+    m.phase === "cancelled" || m.status === "cancelled"
+      ? "cancelled"
+      : m.resolved || m.phase === "resolved" || m.status === "resolved"
+        ? "resolved"
+        : m.endTime * 1000 <= now || m.status === "closed"
+          ? "closed"
+          : m.startTime * 1000 > now
+            ? "upcoming"
+            : "open";
+  const current = marketStatus === "open" || marketStatus === "upcoming";
   const category: MarketItem["category"] =
     /crypto|bitcoin|ethereum|solana/i.test(m.category)
       ? "Crypto"
@@ -107,11 +111,14 @@ export function normalizePanta(
     id: `panta:${m.marketId}`,
     providerId: m.marketId,
     question,
+    marketStatus,
+    questionAvailable: Boolean(suppliedQuestion),
+    isTestContract: /^(?:\[test\]|sandbox test market\b)/i.test(question),
     category,
     source: "solana",
     dataProvider: "panta",
-    yesPrice: m.yesPrice ?? null,
-    noPrice: m.noPrice ?? null,
+    yesPrice: current ? (m.yesPrice ?? null) : null,
+    noPrice: current ? (m.noPrice ?? null) : null,
     volume24h: null,
     liquidity: null,
     resolutionDate: new Date(m.resolutionTime * 1000).toISOString(),
@@ -130,7 +137,10 @@ export function normalizePanta(
     tokenIds: [],
     capturedAt: now,
     tradable:
-      m.startTime * 1000 <= now && (m.yesPrice != null || m.noPrice != null),
+      marketStatus === "open" &&
+      Boolean(suppliedQuestion) &&
+      ["open", m.phase].includes(m.status) &&
+      (m.yesPrice != null || m.noPrice != null),
     eventKey: `panta-event:${m.marketId}`,
   });
 }
@@ -180,36 +190,28 @@ export async function pantaCatalog(
   // Catalog prices are not live. Fetch detail for at most 20 open contracts,
   // four at a time, keeping total work bounded within the route budget.
   const now = Date.now();
-  let excludedTests = false;
   const rows = items.flatMap((raw) => {
     const parsed = rowSchema.safeParse(raw);
     if (!parsed.success) return [];
-    const m = parsed.data;
-    if (
-      /^(?:\[test\]|sandbox test market\b)/i.test(
-        m.title.trim() || m.question?.trim() || "",
-      )
-    ) {
-      excludedTests = true;
-      return [];
-    }
-    return !m.resolved &&
-      ["primary", "secondary"].includes(m.phase) &&
-      ["open", m.phase].includes(m.status) &&
-      m.endTime * 1000 > now &&
-      m.resolutionTime >= m.endTime
-      ? [m]
-      : [];
+    return [parsed.data];
   });
-  const chosen = [...new Map(rows.map((m) => [m.marketId, m])).values()].slice(
-    0,
-    20,
+  const chosen = [...new Map(rows.map((m) => [m.marketId, m])).values()].sort(
+    (a, b) => {
+      const rank = (m: PantaRow) =>
+        !m.resolved &&
+        ["primary", "secondary"].includes(m.phase) &&
+        m.endTime * 1000 > now
+          ? 0
+          : 1;
+      return rank(a) - rank(b);
+    },
   );
-  const markets: MarketItem[] = [];
+  const detailRows = chosen.slice(0, 20);
+  const enriched = new Map<string, MarketItem>();
   let failed = false;
-  for (let offset = 0; offset < chosen.length; offset += 4) {
+  for (let offset = 0; offset < detailRows.length; offset += 4) {
     const results = await Promise.allSettled(
-      chosen.slice(offset, offset + 4).map(async (row: PantaRow) => {
+      detailRows.slice(offset, offset + 4).map(async (row: PantaRow) => {
         const raw = await request(`/markets/${row.marketId}/`, key, transport);
         const detail = rowSchema.parse(raw);
         if (detail.marketId !== row.marketId)
@@ -220,7 +222,7 @@ export async function pantaCatalog(
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       if (result.status === "fulfilled") {
-        if (result.value) markets.push(result.value);
+        if (result.value) enriched.set(result.value.providerId, result.value);
       } else {
         failed = true;
         const unpriced = normalizePanta({
@@ -228,29 +230,57 @@ export async function pantaCatalog(
           yesPrice: null,
           noPrice: null,
         });
-        if (unpriced) markets.push(unpriced);
+        if (unpriced) enriched.set(unpriced.providerId, unpriced);
       }
     }
     // Avoid hammering an unavailable or throttled provider.
     if (results.every((result) => result.status === "rejected")) break;
   }
   return {
-    markets,
+    markets: chosen.flatMap((row) => {
+      const market =
+        enriched.get(row.marketId) ??
+        normalizePanta({ ...row, yesPrice: null, noPrice: null });
+      return market ? [market] : [];
+    }),
     warnings: [
       ...(failed
         ? [
             "Some Panta detail prices are unavailable. Unpriced contracts cannot be paper traded.",
           ]
         : []),
-      ...(rows.length > 20 || cursor || incomplete
-        ? [
-            "Panta discovery is bounded to 200 catalog rows and 20 contract details; the catalog may be incomplete.",
-          ]
+      ...(cursor || incomplete
+        ? ["Panta catalog is incomplete. Refresh to retry remaining pages."]
         : []),
-      ...(!markets.length ? ["Panta returned no current open contracts."] : []),
-      ...(excludedTests
-        ? ["Panta test contracts are excluded from research and paper results."]
-        : []),
+      ...(!chosen.length ? ["Panta returned no contracts."] : []),
     ],
   };
+}
+
+export async function pantaMarket(id: string): Promise<MarketItem> {
+  const address = marketAddress.parse(id.replace(/^panta:/, ""));
+  const key = process.env.PANTA_API_KEY?.trim();
+  if (!key)
+    throw new AppError(
+      "PANTA_UNAVAILABLE",
+      "Panta details are unavailable.",
+      503,
+    );
+  const raw = rowSchema.parse(
+    await request(`/markets/${address}/`, key, fetch),
+  );
+  if (raw.marketId !== address)
+    throw new AppError(
+      "PANTA_INVALID_MARKET",
+      "Panta returned a different contract.",
+      502,
+    );
+  const market = normalizePanta(raw);
+  if (!market)
+    throw new AppError(
+      "PANTA_INVALID_MARKET",
+      "Panta contract details failed validation.",
+      502,
+    );
+  return market;
 }

@@ -39,6 +39,9 @@ test("Panta feed filter, attribution and paper safety on desktop/mobile", async 
       json: { markets: [gamma, panta], warnings: [], capturedAt: now },
     }),
   );
+  await page.route("**/api/trade/market?id=*", (route) =>
+    route.fulfill({ json: panta }),
+  );
   await page.goto("/trade");
   await page
     .getByRole("combobox", { name: /^Market feed/ })

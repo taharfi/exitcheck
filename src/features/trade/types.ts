@@ -12,6 +12,11 @@ export const marketItemSchema = z.object({
   resolutionDate: z.string().datetime(),
   tradingClosesAt: z.string().datetime().optional(),
   marketStartsAt: z.string().datetime().optional(),
+  isTestContract: z.boolean().optional(),
+  marketStatus: z
+    .enum(["open", "upcoming", "closed", "resolved", "cancelled"])
+    .optional(),
+  questionAvailable: z.boolean().optional(),
   rules: z.string().max(15000),
   oracleSource: z.string().max(300),
   url: z
@@ -67,7 +72,7 @@ export const researchSchema = z.object({
 });
 export type ResearchResult = z.infer<typeof researchSchema>;
 export const marketFeedSchema = z.object({
-  markets: z.array(marketItemSchema).max(1120),
+  markets: z.array(marketItemSchema).max(1300),
   warnings: z.array(z.string()),
   capturedAt: z.number(),
 });
