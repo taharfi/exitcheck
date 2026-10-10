@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { marketFeedSchema, type MarketFeed } from "@/features/trade/types";
+import { MarketImage } from "@/features/trade/market-image";
 import styles from "./landing.module.css";
 
 export function LiveMarketPreview() {
@@ -14,7 +15,7 @@ export function LiveMarketPreview() {
       if (running || document.hidden) return;
       running = true;
       try {
-        const response = await fetch("/api/trade?limit=3", {
+        const response = await fetch("/api/trade?limit=12", {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -58,39 +59,47 @@ export function LiveMarketPreview() {
         </p>
       ) : (
         <>
-          {feed.markets.slice(0, 3).map((m) => (
-            <Link key={m.id} href="/trade" className={styles.previewMarket}>
-              <small>
-                {m.isTestContract
-                  ? "PANTA / TEST"
-                  : m.dataProvider === "panta"
-                    ? "PANTA / SOLANA"
-                    : m.source === "solana"
-                      ? "SOLANA"
-                      : "POLYMARKET"}{" "}
-                / {m.dataProvider.toUpperCase()}
-              </small>
-              <h3>{m.question}</h3>
-              <div>
-                <span>
-                  YES{" "}
-                  <b>
-                    {m.yesPrice === null
-                      ? "Unavailable"
-                      : `${(m.yesPrice * 100).toFixed(1)}%`}
-                  </b>
-                </span>
-                <span>
-                  NO{" "}
-                  <b>
-                    {m.noPrice === null
-                      ? "Unavailable"
-                      : `${(m.noPrice * 100).toFixed(1)}%`}
-                  </b>
-                </span>
-              </div>
-            </Link>
-          ))}
+          {[
+            ...feed.markets.filter((m) => m.imageUrl),
+            ...feed.markets.filter((m) => !m.imageUrl),
+          ]
+            .slice(0, 3)
+            .map((m) => (
+              <Link key={m.id} href="/trade" className={styles.previewMarket}>
+                <small>
+                  {m.isTestContract
+                    ? "PANTA / TEST"
+                    : m.dataProvider === "panta"
+                      ? "PANTA / SOLANA"
+                      : m.source === "solana"
+                        ? "SOLANA"
+                        : "POLYMARKET"}{" "}
+                  / {m.dataProvider.toUpperCase()}
+                </small>
+                <div className={styles.previewMarketTitle}>
+                  <MarketImage key={m.imageUrl ?? m.id} src={m.imageUrl} />
+                  <h3>{m.question}</h3>
+                </div>
+                <div>
+                  <span>
+                    YES{" "}
+                    <b>
+                      {m.yesPrice === null
+                        ? "Unavailable"
+                        : `${(m.yesPrice * 100).toFixed(1)}%`}
+                    </b>
+                  </span>
+                  <span>
+                    NO{" "}
+                    <b>
+                      {m.noPrice === null
+                        ? "Unavailable"
+                        : `${(m.noPrice * 100).toFixed(1)}%`}
+                    </b>
+                  </span>
+                </div>
+              </Link>
+            ))}
           <small>
             Provider snapshot:{" "}
             {new Date(feed.capturedAt)
@@ -110,11 +119,17 @@ export function LiveMarketPreview() {
           )}
         </>
       )}
-      {feed?.warnings.map((w) => (
-        <p key={w} role="status">
-          {w}
-        </p>
-      ))}
+      {feed?.warnings
+        .filter(
+          (w) =>
+            w !==
+            "Some Panta detail prices are unavailable. Unpriced contracts cannot be paper traded.",
+        )
+        .map((w) => (
+          <p key={w} role="status">
+            {w}
+          </p>
+        ))}
       <Link className={styles.previewCta} href="/trade">
         Research a market
       </Link>
