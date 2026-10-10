@@ -2,6 +2,7 @@ import { z } from "zod";
 export const marketItemSchema = z.object({
   id: z.string().min(1).max(150),
   question: z.string().min(1).max(1000),
+  imageUrl: z.string().url().max(2048).nullable().optional(),
   category: z.enum(["Crypto", "Macro", "Tech", "Sports", "Other"]),
   source: z.enum(["polymarket", "solana"]),
   dataProvider: z.enum(["gamma", "jupiter", "panta"]),
@@ -17,6 +18,20 @@ export const marketItemSchema = z.object({
     .enum(["open", "upcoming", "closed", "resolved", "cancelled"])
     .optional(),
   questionAvailable: z.boolean().optional(),
+  pantaDetails: z
+    .object({
+      phase: z.enum(["primary", "secondary", "resolved", "cancelled"]),
+      category: z.string().max(100),
+      marketType: z.string().max(100).nullable(),
+      region: z.string().max(200).nullable(),
+      totalVolumeUsdc: z.number().finite().nonnegative().nullable(),
+      primaryYesPrice: z.number().min(0).max(1).nullable(),
+      primaryNoPrice: z.number().min(0).max(1).nullable(),
+      secondaryYesPrice: z.number().min(0).max(1).nullable(),
+      secondaryNoPrice: z.number().min(0).max(1).nullable(),
+      isGraduated: z.boolean().nullable(),
+    })
+    .optional(),
   rules: z.string().max(15000),
   oracleSource: z.string().max(300),
   url: z

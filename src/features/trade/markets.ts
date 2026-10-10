@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { pantaCatalog, pantaMarket } from "./panta";
+import { sourceImage } from "./image-url";
 import { JupiterProvider } from "@/lib/provider/jupiter";
 import { AppError } from "@/lib/errors";
 import { readLimitedText } from "@/lib/read-limited-text";
@@ -74,6 +75,8 @@ const gammaSchema = z.object({
   liquidity: numeric.nullish(),
   acceptingOrders: z.boolean().optional(),
   resolutionSource: z.string().max(300).nullish(),
+  image: z.unknown().optional(),
+  icon: z.unknown().optional(),
   events: z
     .array(z.object({ id: z.union([z.string(), z.number()]) }))
     .optional(),
@@ -127,6 +130,7 @@ export function normalizeGamma(raw: unknown, now = Date.now()): MarketItem[] {
           id: `poly:${m.id}`,
           providerId: m.id,
           question: m.question,
+          imageUrl: sourceImage(m.image) ?? sourceImage(m.icon),
           category: m.sportsMarketType
             ? "Sports"
             : category(`${m.category ?? ""} ${m.question}`),
@@ -154,6 +158,7 @@ export function normalizeGamma(raw: unknown, now = Date.now()): MarketItem[] {
 const forecastSchema = z.object({
   marketId: z.string(),
   title: z.string(),
+  imageUrl: z.unknown().optional(),
   provider: z.literal("bisonfi"),
   tradable: z.boolean(),
   outcomeMint: address,
@@ -220,12 +225,26 @@ export async function gammaCatalog(
       : [],
   };
 }
+const eventSchema = z.object({
+  markets: z.array(z.unknown()).default([]),
+  metadata: z.object({ imageUrl: z.unknown().optional() }).nullish(),
+});
+function eventMarkets(event: z.infer<typeof eventSchema>): unknown[] {
+  return event.markets.map((value) => {
+    if (typeof value !== "object" || value === null || Array.isArray(value))
+      return value;
+    const market = value as Record<string, unknown>;
+    return {
+      ...market,
+      imageUrl:
+        sourceImage(market.imageUrl) ?? sourceImage(event.metadata?.imageUrl),
+    };
+  });
+}
 async function solanaMarkets(): Promise<MarketItem[]> {
   const response = z
     .object({
-      data: z
-        .array(z.object({ markets: z.array(z.unknown()).default([]) }))
-        .max(100),
+      data: z.array(eventSchema).max(100),
     })
     .parse(
       await new JupiterProvider().request(
@@ -233,53 +252,53 @@ async function solanaMarkets(): Promise<MarketItem[]> {
       ),
     );
   const now = Date.now();
-  return response.data
-    .flatMap((e) => e.markets)
-    .flatMap((value) => {
-      const result = forecastSchema.safeParse(value);
-      if (!result.success) return [];
-      const m = result.data;
-      if (
-        !m.tradable ||
-        m.status !== "open" ||
-        m.openTime * 1000 > now ||
-        m.closeTime * 1000 <= now
-      )
-        return [];
-      const price =
-        m.pricing?.buyYesPriceUsd == null
-          ? null
-          : Number(m.pricing.buyYesPriceUsd) / 1000000;
-      if (price !== null && (price < 0 || price > 1)) return [];
-      // UP and DOWN are separate outcome-token markets; inventing a complementary NO quote is invalid.
-      return [
-        marketItemSchema.parse({
-          id: `sol:${m.marketId}`,
-          providerId: m.marketId,
-          question: `BTC ${m.title} — Forecast 15-minute round`,
-          category: "Crypto",
-          source: "solana",
-          dataProvider: "jupiter",
-          yesPrice: price,
-          noPrice: null,
-          volume24h: null,
-          liquidity: null,
-          resolutionDate: new Date(m.closeTime * 1000).toISOString(),
-          rules:
-            "BTC 15-minute UP/DOWN round. UP wins at or above the opening BTC price; DOWN wins below it. The market ID selects the outcome. Verify this round's terms in Jupiter.",
-          oracleSource: "Chainlink BTC/USD • Jupiter Forecast",
-          url: "https://developers.jup.ag/docs/prediction/forecast",
-          tokenIds: [m.outcomeMint],
-          capturedAt: now,
-          tradable: true,
-        }),
-      ];
-    });
+  return response.data.flatMap(eventMarkets).flatMap((value) => {
+    const result = forecastSchema.safeParse(value);
+    if (!result.success) return [];
+    const m = result.data;
+    if (
+      !m.tradable ||
+      m.status !== "open" ||
+      m.openTime * 1000 > now ||
+      m.closeTime * 1000 <= now
+    )
+      return [];
+    const price =
+      m.pricing?.buyYesPriceUsd == null
+        ? null
+        : Number(m.pricing.buyYesPriceUsd) / 1000000;
+    if (price !== null && (price < 0 || price > 1)) return [];
+    // UP and DOWN are separate outcome-token markets; inventing a complementary NO quote is invalid.
+    return [
+      marketItemSchema.parse({
+        id: `sol:${m.marketId}`,
+        providerId: m.marketId,
+        question: `BTC ${m.title} — Forecast 15-minute round`,
+        imageUrl: sourceImage(m.imageUrl),
+        category: "Crypto",
+        source: "solana",
+        dataProvider: "jupiter",
+        yesPrice: price,
+        noPrice: null,
+        volume24h: null,
+        liquidity: null,
+        resolutionDate: new Date(m.closeTime * 1000).toISOString(),
+        rules:
+          "BTC 15-minute UP/DOWN round. UP wins at or above the opening BTC price; DOWN wins below it. The market ID selects the outcome. Verify this round's terms in Jupiter.",
+        oracleSource: "Chainlink BTC/USD • Jupiter Forecast",
+        url: "https://developers.jup.ag/docs/prediction/forecast",
+        tokenIds: [m.outcomeMint],
+        capturedAt: now,
+        tradable: true,
+      }),
+    ];
+  });
 }
 async function jupiterPolymarket(): Promise<MarketItem[]> {
   const mSchema = z.object({
     marketId: z.string().max(140),
     title: z.string().max(1000),
+    imageUrl: z.unknown().optional(),
     provider: z.literal("polymarket"),
     status: z.string(),
     result: z.string().nullable(),
@@ -295,7 +314,7 @@ async function jupiterPolymarket(): Promise<MarketItem[]> {
   });
   const data = z
     .object({
-      data: z.array(z.object({ markets: z.array(z.unknown()) })).max(25),
+      data: z.array(eventSchema).max(25),
     })
     .parse(
       await new JupiterProvider().request(
@@ -304,7 +323,7 @@ async function jupiterPolymarket(): Promise<MarketItem[]> {
     );
   const now = Date.now();
   return data.data
-    .flatMap((e) => e.markets)
+    .flatMap(eventMarkets)
     .flatMap((value) => {
       const r = mSchema.safeParse(value);
       if (!r.success) return [];
@@ -321,6 +340,7 @@ async function jupiterPolymarket(): Promise<MarketItem[]> {
           id: `jup:${m.marketId}`,
           providerId: m.marketId,
           question: m.title,
+          imageUrl: sourceImage(m.imageUrl),
           category: category(m.title),
           source: "polymarket",
           dataProvider: "jupiter",

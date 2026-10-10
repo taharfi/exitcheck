@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import { readLimitedText } from "@/lib/read-limited-text";
 import { marketItemSchema, type MarketItem } from "./types";
+import { sourceImage } from "./image-url";
 
 const origin = "https://live-api.panta.market/api/v1";
 const marketAddress = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
@@ -24,6 +25,16 @@ const probability = z
   ])
   .pipe(z.number().finite().min(0).max(1))
   .nullish();
+const amount = z
+  .union([
+    z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .transform(Number),
+    z.number(),
+  ])
+  .pipe(z.number().finite().nonnegative())
+  .nullish();
 const rowSchema = z.object({
   marketId: marketAddress,
   title: z.string().max(1000).default(""),
@@ -32,6 +43,7 @@ const rowSchema = z.object({
   sources: z.array(z.string().max(1000)).max(20).optional(),
   oracle: z.string().max(3000).optional(),
   description: z.string().max(15000).default(""),
+  images: z.unknown().optional(),
   category: z.string().max(100),
   phase: z.enum(["primary", "secondary", "resolved", "cancelled"]),
   startTime: providerTimestamp,
@@ -41,6 +53,14 @@ const rowSchema = z.object({
   status: z.string().max(100),
   yesPrice: probability,
   noPrice: probability,
+  volumeUsdc: amount,
+  marketType: z.string().max(100).nullish(),
+  region: z.string().max(200).nullish(),
+  primaryYesPrice: probability,
+  primaryNoPrice: probability,
+  secondaryYesPrice: probability,
+  secondaryNoPrice: probability,
+  isGraduated: z.boolean().nullish(),
 });
 type PantaRow = z.infer<typeof rowSchema>;
 
@@ -100,7 +120,7 @@ export function normalizePanta(
   const category: MarketItem["category"] =
     /crypto|bitcoin|ethereum|solana/i.test(m.category)
       ? "Crypto"
-      : /macro|politic|econom/i.test(m.category)
+      : /macro|politic|econom|finance/i.test(m.category)
         ? "Macro"
         : /tech|science|ai/i.test(m.category)
           ? "Tech"
@@ -111,6 +131,9 @@ export function normalizePanta(
     id: `panta:${m.marketId}`,
     providerId: m.marketId,
     question,
+    imageUrl: Array.isArray(m.images)
+      ? (m.images.map(sourceImage).find(Boolean) ?? null)
+      : null,
     marketStatus,
     questionAvailable: Boolean(suppliedQuestion),
     isTestContract: /^(?:\[test\]|sandbox test market\b)/i.test(question),
@@ -121,6 +144,18 @@ export function normalizePanta(
     noPrice: current ? (m.noPrice ?? null) : null,
     volume24h: null,
     liquidity: null,
+    pantaDetails: {
+      phase: m.phase,
+      category: m.category,
+      marketType: m.marketType ?? null,
+      region: m.region ?? null,
+      totalVolumeUsdc: m.volumeUsdc ?? null,
+      primaryYesPrice: current ? (m.primaryYesPrice ?? null) : null,
+      primaryNoPrice: current ? (m.primaryNoPrice ?? null) : null,
+      secondaryYesPrice: current ? (m.secondaryYesPrice ?? null) : null,
+      secondaryNoPrice: current ? (m.secondaryNoPrice ?? null) : null,
+      isGraduated: m.isGraduated ?? null,
+    },
     resolutionDate: new Date(m.resolutionTime * 1000).toISOString(),
     tradingClosesAt: new Date(m.endTime * 1000).toISOString(),
     marketStartsAt: new Date(m.startTime * 1000).toISOString(),
@@ -144,6 +179,8 @@ export function normalizePanta(
     eventKey: `panta-event:${m.marketId}`,
   });
 }
+
+export { request as pantaRequest, marketAddress as pantaAddress };
 
 export async function pantaCatalog(
   transport: typeof fetch = fetch,
@@ -229,6 +266,10 @@ export async function pantaCatalog(
           ...chosen[offset + i],
           yesPrice: null,
           noPrice: null,
+          primaryYesPrice: null,
+          primaryNoPrice: null,
+          secondaryYesPrice: null,
+          secondaryNoPrice: null,
         });
         if (unpriced) enriched.set(unpriced.providerId, unpriced);
       }
@@ -240,7 +281,15 @@ export async function pantaCatalog(
     markets: chosen.flatMap((row) => {
       const market =
         enriched.get(row.marketId) ??
-        normalizePanta({ ...row, yesPrice: null, noPrice: null });
+        normalizePanta({
+          ...row,
+          yesPrice: null,
+          noPrice: null,
+          primaryYesPrice: null,
+          primaryNoPrice: null,
+          secondaryYesPrice: null,
+          secondaryNoPrice: null,
+        });
       return market ? [market] : [];
     }),
     warnings: [

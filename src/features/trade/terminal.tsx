@@ -8,6 +8,8 @@ import {
 } from "react";
 import { tradeDecision } from "./decision";
 import { PreTradeCheck } from "./pre-trade-check";
+import { PantaInsights } from "./panta-insights";
+import { MarketImage } from "./market-image";
 import { PaperJournal } from "./paper-journal";
 import { Watchlist } from "./watchlist";
 import { GuidedStudy } from "./guided-study";
@@ -573,7 +575,10 @@ export function TradeTerminal() {
                       </span>
                       <span>{m.category}</span>
                     </div>
-                    <h3>{m.question}</h3>
+                    <div className={styles.marketTitleRow}>
+                      <MarketImage key={m.imageUrl ?? m.id} src={m.imageUrl} />
+                      <h3>{m.question}</h3>
+                    </div>
                     {m.marketStatus && (
                       <span className={styles.live}>
                         {m.marketStatus.toUpperCase()}
@@ -705,6 +710,9 @@ export function TradeTerminal() {
                         : "Open original market / rules ↗"}
                     </a>
                   </details>
+                  {selected.dataProvider === "panta" && (
+                    <PantaInsights key={selected.id} market={selected} />
+                  )}
                 </div>
                 <div className={styles.researchPanel}>
                   <div className={styles.sectionHeading}>

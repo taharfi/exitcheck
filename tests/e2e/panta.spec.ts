@@ -42,6 +42,18 @@ test("Panta feed filter, attribution and paper safety on desktop/mobile", async 
   await page.route("**/api/trade/market?id=*", (route) =>
     route.fulfill({ json: panta }),
   );
+  await page.route("**/api/panta/insights?*", (route) =>
+    route.fulfill({
+      json: {
+        marketId: panta.providerId,
+        capturedAt: now,
+        categories: ["crypto", "sports"],
+        trades: [],
+        positions: [],
+        warnings: [],
+      },
+    }),
+  );
   await page.goto("/trade");
   await page
     .getByRole("combobox", { name: /^Market feed/ })
@@ -52,6 +64,12 @@ test("Panta feed filter, attribution and paper safety on desktop/mobile", async 
       .getByRole("heading", { name: gamma.question }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: /PANTA \/ SOLANA/ }).click();
+  await page.getByText("Panta data & wallet holdings", { exact: true }).click();
+  await page.getByRole("button", { name: "Load recent market trades" }).click();
+  await expect(page.getByText("No catalog trades returned.")).toBeVisible();
+  await expect(
+    page.getByText("Provider categories: crypto, sports"),
+  ).toBeVisible();
   await expect(page.getByText(/Real bonding-curve fills/)).toBeVisible();
   await expect(page.getByText(/Forecast’s market ID/)).toHaveCount(0);
   const no = page.getByRole("button", { name: "BUY NO", exact: true });

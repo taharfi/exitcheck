@@ -119,13 +119,16 @@ describe("Panta market integration", () => {
   it("preserves unpriced catalog context on failed detail reads and blocks paper fills", async () => {
     const transport = vi
       .fn<typeof fetch>()
-      .mockResolvedValueOnce(Response.json({ items: [row] }))
+      .mockResolvedValueOnce(
+        Response.json({ items: [{ ...row, primaryYesPrice: "0.9" }] }),
+      )
       .mockResolvedValueOnce(new Response("unavailable", { status: 503 }));
     const feed = await pantaCatalog(transport, "test-secret");
     expect(feed.markets[0]).toMatchObject({
       yesPrice: null,
       noPrice: null,
       tradable: false,
+      pantaDetails: { primaryYesPrice: null },
     });
     expect(() => paperQuote(feed.markets[0], "YES", "10", "0.6")).toThrow(
       /no available live price/,

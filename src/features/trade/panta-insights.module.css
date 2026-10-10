@@ -1,0 +1,126 @@
+.panel {
+  border: 1px solid #dfe4d6;
+  border-radius: 10px;
+  background: #fff;
+  margin-top: 16px;
+  min-width: 0;
+}
+.panel summary {
+  padding: 14px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.body {
+  padding: 0 16px 16px;
+  min-width: 0;
+}
+.attribution {
+  display: inline-block;
+  font-size: 11px;
+  color: #496333;
+  margin-bottom: 12px;
+}
+.facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+.facts div {
+  min-width: 0;
+}
+.facts dt {
+  color: #626c5b;
+  font-size: 10px;
+}
+.facts dd {
+  margin: 4px 0 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.note,
+.results p {
+  font-size: 11px;
+  color: #626c5b;
+  line-height: 1.7;
+  margin: 10px 0;
+}
+.body button {
+  background: #496333;
+  color: #fff;
+  border-radius: 5px;
+  padding: 10px 14px;
+  font-size: 11px;
+}
+.wallet {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #dfe4d6;
+  margin-top: 20px;
+  padding-top: 18px;
+}
+.wallet label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.wallet input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  font-size: 12px;
+}
+.wallet button {
+  justify-self: start;
+}
+.wallet .note {
+  margin: 0;
+}
+.scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+  text-align: left;
+}
+.scroll caption {
+  text-align: left;
+  padding: 8px 0;
+  font-weight: 600;
+}
+.scroll th,
+.scroll td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #dfe4d6;
+  vertical-align: top;
+}
+.scroll th {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.scroll small {
+  display: block;
+  font-size: 9px;
+  color: #626c5b;
+  margin-top: 4px;
+}
+.scroll a {
+  color: #496333;
+}
+.results {
+  margin-top: 14px;
+}
+.panel button:disabled {
+  opacity: 0.6;
+}
+@media (max-width: 540px) {
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .body {
+    padding: 0 12px 12px;
+  }
+}
