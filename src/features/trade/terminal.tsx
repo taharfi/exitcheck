@@ -214,6 +214,13 @@ export function TradeTerminal() {
     (report.marketProbability !== selected.yesPrice ||
       clock - report.capturedAt > 120000),
   );
+  // Missing individual quotes are explained on the affected contract cards.
+  // Keep feed outages and incomplete catalog warnings in the global banner.
+  const feedWarnings = warnings.filter(
+    (warning) =>
+      warning !==
+      "Some Panta detail prices are unavailable. Unpriced contracts cannot be paper traded.",
+  );
   const shown = markets.filter(
     (m) =>
       (category === "All" || m.category === category) &&
@@ -501,9 +508,9 @@ export function TradeTerminal() {
             Live providers · 30s refresh · {markets.length} contracts
           </span>
         </div>
-        {(feedError || warnings.length > 0) && (
+        {(feedError || feedWarnings.length > 0) && (
           <div className={styles.warning} role="status">
-            {[feedError, ...warnings].filter(Boolean).join(" ")}
+            {[feedError, ...feedWarnings].filter(Boolean).join(" ")}
           </div>
         )}
         {!account && (
@@ -603,6 +610,16 @@ export function TradeTerminal() {
                         </div>
                       </div>
                     </div>
+                    {m.dataProvider === "panta" &&
+                      m.yesPrice === null &&
+                      m.noPrice === null &&
+                      (!m.marketStatus ||
+                        m.marketStatus === "open" ||
+                        m.marketStatus === "upcoming") && (
+                        <span className={styles.live}>
+                          Quote unavailable · view market details
+                        </span>
+                      )}
                     <div className={styles.metrics}>
                       <span>
                         24h volume <b>{dollars(m.volume24h)}</b>
